@@ -1,8 +1,6 @@
 package com.romay.meme.columbarium.meme.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,7 +32,7 @@ public class Meme {
 
   private LocalDate startDate; // 밈이 흥한날짜
 
-  private LocalDate endDate; // 밈이 망해가는 날짜
+  private LocalDate endDate; // 밈이 망한 날짜
 
   private Long orgVersionCode; // 원본 글 PK
 
@@ -42,8 +40,7 @@ public class Meme {
 
   private LocalDateTime updatedAt;
 
-  @Enumerated(EnumType.STRING)
-  private Category category; // 글 카테고리
+  private Long categoryCode; // 글 카테고리
 
   private Long authorCode; // 작성자 PK
 
