@@ -2,8 +2,8 @@ package com.romay.meme.columbarium.meme.controller;
 
 import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
+import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
-import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.service.MemeService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +32,10 @@ public class MemeController {
    * @return page 번호에 해당하는 밈 리스트 return
    */
   @GetMapping("/list")
-  public ResponseEntity<List<Meme>> getMemeList(
+  public ResponseEntity<MemeListResponseDto> getMemeList(
       @RequestParam(name = "page") int page
   ) {
-    List<Meme> memeList = memeService.getMemeList(); // 호출
+    MemeListResponseDto memeList = memeService.getMemeList(page);// 호출
     return ResponseEntity.ok(memeList);
   }
 

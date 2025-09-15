@@ -5,6 +5,8 @@ import com.romay.meme.columbarium.category.entity.Category;
 import com.romay.meme.columbarium.category.repository.CategoryRepository;
 import com.romay.meme.columbarium.exception.MemeNotFoundException;
 import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
+import com.romay.meme.columbarium.meme.dto.MemeListDto;
+import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
@@ -12,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,8 +28,33 @@ public class MemeService {
   private final MemeRepository memeRepository;
   private final CategoryRepository categoryRepository;
 
-  public List<Meme> getMemeList() {
-    return memeRepository.findAll();
+  public MemeListResponseDto getMemeList(int page) {
+    int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
+    Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
+
+    Page<Meme> memePage = memeRepository.findAll(pageable);
+
+    // DTO 로 변환
+    List<MemeListDto> dtoList = memePage.getContent()
+        .stream().map(
+            item -> {
+              return MemeListDto.builder()
+                  .code(item.getCode())
+                  .title(item.getTitle())
+                  .startDate(item.getStartDate())
+                  .endDate(item.getEndDate())
+                  .build();
+            }
+        ).toList();
+
+    MemeListResponseDto dto = MemeListResponseDto.builder()
+        .data(dtoList)
+        .page(page)
+        .totalPages(memePage.getTotalPages())
+        .totalCount(memePage.getTotalElements())
+        .build();
+
+    return dto;
   }
 
   public String imageUpload(MultipartFile file) {
