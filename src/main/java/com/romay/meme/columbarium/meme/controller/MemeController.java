@@ -8,6 +8,7 @@ import com.romay.meme.columbarium.meme.service.MemeService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -57,6 +58,7 @@ public class MemeController {
    * @param file 프론트에서 날아온 이미지 파일
    * @return S3 에 저장된 이미지 URL Return
    */
+  @PreAuthorize("hasRole('USER')")
   @PostMapping("/image")
   public ResponseEntity<String> imageUpload(@RequestParam("file") MultipartFile file) {
     String imageUrl = memeService.imageUpload(file); // image upload
@@ -68,6 +70,7 @@ public class MemeController {
    *
    * @param uploadDto 업로드 하는 DTO
    */
+  @PreAuthorize("hasRole('USER')")
   @PostMapping("/upload")
   public ResponseEntity<String> uploadMeme(@RequestBody MemeUploadDto uploadDto) {
     memeService.uploadMeme(uploadDto);
