@@ -50,7 +50,7 @@ public class AuthService {
           member.getRole().name());
 
     } catch (AuthenticationException e) {
-      throw new RuntimeException("로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.");
+      throw new MemberNotFoundException("로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.");
     }
   }
 
@@ -69,5 +69,9 @@ public class AuthService {
         .build();
 
     memberRepository.save(member);
+  }
+
+  public boolean idCheck(String memberId) {
+    return memberRepository.existsMemberById(memberId);
   }
 }
