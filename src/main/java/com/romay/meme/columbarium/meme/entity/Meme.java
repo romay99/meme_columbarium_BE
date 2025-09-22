@@ -11,9 +11,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -32,9 +34,11 @@ public class Meme {
 
   private LocalDate startDate; // 밈이 흥한날짜
 
+  private String thumbnail; // 밈 게시글에는 썸네일이 필수!
+
   private LocalDate endDate; // 밈이 망한 날짜
 
-  private Long orgVersionCode; // 원본 글 PK
+  private Long orgMemeCode; // 원본 글 PK
 
   private Long version; // 글 버전
 
@@ -45,5 +49,7 @@ public class Meme {
   private Long authorCode; // 작성자 PK
 
   private Long updaterCode; // 수정자 pk
+
+  private Boolean latest; // 가장 최신버전글인지
 
 }

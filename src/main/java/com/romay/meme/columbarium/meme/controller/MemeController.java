@@ -1,6 +1,7 @@
 package com.romay.meme.columbarium.meme.controller;
 
 import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
+import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
@@ -48,7 +49,14 @@ public class MemeController {
    */
   @GetMapping("/info")
   public ResponseEntity<MemeDetailResponseDto> getMemeInfo(@RequestParam("code") Long memeCode) {
-    MemeDetailResponseDto memeInfo = memeService.getMemeInfo(memeCode);
+    // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails userDetails = null;
+    if (auth.getPrincipal() != "anonymousUser") {
+      userDetails = (CustomUserDetails) auth.getPrincipal();
+    }
+
+    MemeDetailResponseDto memeInfo = memeService.getMemeInfo(memeCode, userDetails);
     return ResponseEntity.ok(memeInfo);
   }
 
@@ -75,7 +83,9 @@ public class MemeController {
   public ResponseEntity<String> uploadMeme(@RequestBody MemeUploadDto uploadDto) {
     // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    memeService.uploadMeme(uploadDto);
+    CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+
+    memeService.uploadMeme(uploadDto, userDetails);
     return ResponseEntity.ok().build();
   }
 

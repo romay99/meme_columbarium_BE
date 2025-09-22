@@ -23,11 +23,15 @@ public class MemeDetailResponseDto {
   private LocalDate endDate;
   private LocalDateTime createdAt; // 작성일
   private Long version;
-  private Long orgVersionCode;
+  private Long orgMemeCode;
   private LocalDateTime updatedAt;
   private String category; // 글 카테고리
   private Long authorCode; // 작성자 PK
+  private String authorNickName; // 작성자 닉네임
   private Long updaterCode; // 수정자 pk
+
+  private Long likesCount; // 총 좋아요 갯수
+  private boolean isLikes; // 글 조회하는 유저가 좋아요 눌렀는지 여부
 
 
   // Entity -> DTO 변환 메서드
@@ -40,7 +44,7 @@ public class MemeDetailResponseDto {
         .endDate(meme.getEndDate())
         .createdAt(meme.getCreatedAt())
         .version(meme.getVersion())
-        .orgVersionCode(meme.getOrgVersionCode())
+        .orgMemeCode(meme.getOrgMemeCode())
         .updatedAt(meme.getUpdatedAt())
         .authorCode(meme.getAuthorCode() != null ? meme.getAuthorCode() : null)
         .updaterCode(meme.getUpdaterCode() != null ? meme.getUpdaterCode() : null)

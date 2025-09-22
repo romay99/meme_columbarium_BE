@@ -16,7 +16,7 @@ public class JWTUtil {
   @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationThatIsVeryLongAndSecure123456789}")
   private String secretKey;
 
-  @Value("${jwt.expiration:86400000}") // 24시간
+  @Value("${jwt.expiration:3600000}")
   private long expiration;
 
   private SecretKey getSigningKey() {

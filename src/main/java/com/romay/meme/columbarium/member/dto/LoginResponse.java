@@ -9,15 +9,11 @@ public class LoginResponse {
 
   private String token;
   private String type;
-  private String id;
   private String nickname;
-  private String role;
 
-  public LoginResponse(String token, String id, String nickname, String role) {
+  public LoginResponse(String token, String nickname) {
     this.token = token;
     this.type = "Bearer";
-    this.id = id;
     this.nickname = nickname;
-    this.role = role;
   }
 }

@@ -46,8 +46,7 @@ public class AuthService {
           List.of(member.getRole().name())
       );
 
-      return new LoginResponse(token, member.getId(), member.getNickname(),
-          member.getRole().name());
+      return new LoginResponse(token, member.getNickname());
 
     } catch (AuthenticationException e) {
       throw new MemberNotFoundException("로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.");
