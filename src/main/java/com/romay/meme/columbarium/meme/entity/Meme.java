@@ -1,10 +1,14 @@
 package com.romay.meme.columbarium.meme.entity;
 
+import com.romay.meme.columbarium.category.entity.Category;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -51,5 +55,9 @@ public class Meme {
   private Long updaterCode; // 수정자 pk
 
   private Boolean latest; // 가장 최신버전글인지
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "categoryCode", referencedColumnName = "code", insertable = false, updatable = false)
+  private Category category;
 
 }

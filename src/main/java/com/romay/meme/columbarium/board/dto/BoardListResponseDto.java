@@ -10,8 +10,9 @@ import java.util.List;
 @Setter
 @Builder
 public class BoardListResponseDto {
-    Integer page; // 현재 페이지
-    Integer totalPages; // 총 페이지 갯수
-    Long totalCount; // 총 게시글 갯수
-    List<BoardListDto> data;
+
+  private Integer page; // 현재 페이지
+  private Integer totalPages; // 총 페이지 갯수
+  private Long totalCount; // 총 게시글 갯수
+  private List<BoardListDto> data;
 }

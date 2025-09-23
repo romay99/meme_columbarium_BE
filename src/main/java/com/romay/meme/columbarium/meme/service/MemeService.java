@@ -41,7 +41,7 @@ public class MemeService {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
     Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
 
-    Page<Meme> memePage = memeRepository.findAll(pageable);
+    Page<Meme> memePage = memeRepository.findAllWithCategory(pageable);
 
     // DTO 로 변환
     List<MemeListDto> dtoList = memePage.getContent()
@@ -52,6 +52,8 @@ public class MemeService {
                   .title(item.getTitle())
                   .startDate(item.getStartDate())
                   .endDate(item.getEndDate())
+                  .category(item.getCategory().getName())
+                  .categoryCode(item.getCategory().getCode())
                   .build();
             }
         ).toList();

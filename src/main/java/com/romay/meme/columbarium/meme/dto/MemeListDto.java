@@ -19,4 +19,7 @@ public class MemeListDto {
   private LocalDate startDate; // 밈이 흥한날짜
   private LocalDate endDate; // 밈이 망한 날짜
 
+  private Long categoryCode; // 카테고리 PK
+  private String category; // 밈 카테고리
+
 }
