@@ -1,10 +1,12 @@
 package com.romay.meme.columbarium.board.service;
 
+import com.romay.meme.columbarium.board.dto.BoardDetailDto;
 import com.romay.meme.columbarium.board.dto.BoardListDto;
 import com.romay.meme.columbarium.board.dto.BoardListResponseDto;
 import com.romay.meme.columbarium.board.dto.BoardPostDto;
 import com.romay.meme.columbarium.board.entity.Board;
 import com.romay.meme.columbarium.board.repository.BoardRepository;
+import com.romay.meme.columbarium.exception.BoardNotFoundException;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,5 +69,22 @@ public class BoardService {
   public String imageUpload(MultipartFile file) {
     // TODO 이미지 업로드 기능 작업해야함
     return "";
+  }
+
+  public BoardDetailDto getBoardInfo(Long boardCode) {
+    Board board = boardRepository.findByCodeWithMember(boardCode).orElseThrow(
+            () -> new BoardNotFoundException("존재하지 않는 글입니다.")
+    );
+
+    BoardDetailDto dto = BoardDetailDto.builder()
+            .code(board.getCode())
+            .title(board.getTitle())
+            .contents(board.getContents())
+            .createdAt(board.getCreateAt())
+            .authorCode(board.getMember().getCode())
+            .authorNickName(board.getMember().getNickname())
+            .build();
+
+    return dto;
   }
 }

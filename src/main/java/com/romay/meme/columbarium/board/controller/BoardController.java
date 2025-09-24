@@ -1,5 +1,6 @@
 package com.romay.meme.columbarium.board.controller;
 
+import com.romay.meme.columbarium.board.dto.BoardDetailDto;
 import com.romay.meme.columbarium.board.dto.BoardListResponseDto;
 import com.romay.meme.columbarium.board.dto.BoardPostDto;
 import com.romay.meme.columbarium.board.service.BoardService;
@@ -54,5 +55,14 @@ public class BoardController {
   public ResponseEntity<String> imageUpload(@RequestParam("file") MultipartFile file) {
     String imageUrl = boardService.imageUpload(file); // image upload
     return ResponseEntity.ok(imageUrl);
+  }
+
+  @GetMapping("/info")
+  public ResponseEntity<BoardDetailDto> getBoardInfo(
+          @RequestParam("code") Long boardCode
+  ){
+    BoardDetailDto info = boardService.getBoardInfo(boardCode);
+
+    return ResponseEntity.ok(info);
   }
 }

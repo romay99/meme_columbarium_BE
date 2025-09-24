@@ -61,7 +61,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(authz -> authz
             .requestMatchers("/meme/categories", "/meme/info", "/meme/list",
                 "/member/login", "/member/signup", "/member/check-id/**", "/meme/info/**",
-                "/comment/meme/list", "/board/list")
+                "/comment/meme/list", "/board/list","/board/info")
             .permitAll()
             .anyRequest().authenticated()
         )
