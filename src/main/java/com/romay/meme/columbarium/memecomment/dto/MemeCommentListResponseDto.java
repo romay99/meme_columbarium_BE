@@ -12,7 +12,7 @@ public class MemeCommentListResponseDto {
 
   private Integer page; //현재 페이지
   private Integer totalPages; // 총 페이지 갯수
-  private Long totalCount; //총 게시글 갯수
+  private Long totalCount; //총 댓글 갯수
   private List<MemeCommentListDto> data;
 
 

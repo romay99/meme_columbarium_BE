@@ -1,4 +1,4 @@
-package com.romay.meme.columbarium.memecomment.dto;
+package com.romay.meme.columbarium.boardcomment.dto;
 
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -8,13 +8,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class MemeCommentListDto {
+public class BoardCommentListDto {
 
   private Long code;
   private String contents;
   private LocalDateTime createdAt;
 
-  private Long memeCode;
+  private Long boardCode;
   private String authorNickName; // 작성자 닉네임
 
 }

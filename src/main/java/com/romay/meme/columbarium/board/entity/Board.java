@@ -25,6 +25,8 @@ public class Board {
 
   private Long authorCode; // 작성자 pk
 
+  private boolean isNotice; // 공지 여부
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "authorCode", referencedColumnName = "code", insertable = false, updatable = false)
   private Member member;

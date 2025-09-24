@@ -50,7 +50,7 @@ public class MemeCommentService {
               return MemeCommentListDto.builder()
                   .code(item.getCode())
                   .contents(item.getContents())
-                  .createAt(item.getCreatedAt())
+                  .createdAt(item.getCreatedAt())
                   .memeCode(item.getMemeCode())
                   .authorNickName(item.getMember().getNickname())
                   .build();
