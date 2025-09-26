@@ -1,11 +1,10 @@
 package com.romay.meme.columbarium.board.service;
 
-import com.romay.meme.columbarium.board.dto.BoardDetailDto;
-import com.romay.meme.columbarium.board.dto.BoardListDto;
-import com.romay.meme.columbarium.board.dto.BoardListResponseDto;
-import com.romay.meme.columbarium.board.dto.BoardPostDto;
+import com.romay.meme.columbarium.board.dto.*;
 import com.romay.meme.columbarium.board.entity.Board;
+import com.romay.meme.columbarium.board.excepetion.MemberNotMatchException;
 import com.romay.meme.columbarium.board.repository.BoardRepository;
+import com.romay.meme.columbarium.boardcomment.repository.BoardCommentRepository;
 import com.romay.meme.columbarium.exception.BoardNotFoundException;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BoardService {
 
   private final BoardRepository boardRepository;
+  private final BoardCommentRepository boardCommentRepository;
 
   public void postBoard(BoardPostDto dto, CustomUserDetails userDetails) {
 
@@ -86,5 +86,23 @@ public class BoardService {
             .build();
 
     return dto;
+  }
+
+  public void deleteBoard(Long boardCode, CustomUserDetails userDetails) {
+    Board board = boardRepository.findById(boardCode).orElseThrow(
+            () -> new BoardNotFoundException("존재하지 않는 게시글입니다.")
+    );
+
+    // 본인 글인지 체크
+    if(board.getMember().getCode() != userDetails.getMember().getCode()) {
+      throw new MemberNotMatchException("본인의 글만 삭제할 수 있습니다.");
+    }
+
+    log.info("Delete Board : " + board.getTitle() + " By " + userDetails.getMember().getCode() + " User");
+
+    boardRepository.delete(board);
+    boardCommentRepository.deleteAllByBoardCode(boardCode);
+
+
   }
 }

@@ -1,9 +1,11 @@
 package com.romay.meme.columbarium.board.controller;
 
+import com.romay.meme.columbarium.board.dto.BoardDeleteDto;
 import com.romay.meme.columbarium.board.dto.BoardDetailDto;
 import com.romay.meme.columbarium.board.dto.BoardListResponseDto;
 import com.romay.meme.columbarium.board.dto.BoardPostDto;
 import com.romay.meme.columbarium.board.service.BoardService;
+import com.romay.meme.columbarium.boardcomment.dto.BoardCommentPostDto;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -64,5 +66,16 @@ public class BoardController {
     BoardDetailDto info = boardService.getBoardInfo(boardCode);
 
     return ResponseEntity.ok(info);
+  }
+
+  @DeleteMapping("/delete")
+  public ResponseEntity<String> deleteBoard(@RequestParam Long boardCode ) {
+    // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+
+    boardService.deleteBoard(boardCode, userDetails);
+
+    return ResponseEntity.ok().build();
   }
 }
