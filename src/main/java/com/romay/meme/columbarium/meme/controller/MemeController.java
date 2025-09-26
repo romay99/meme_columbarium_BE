@@ -4,6 +4,7 @@ import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
+import com.romay.meme.columbarium.meme.dto.MemeUpdateDto;
 import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
 import com.romay.meme.columbarium.meme.service.MemeService;
 import java.util.List;
@@ -86,6 +87,21 @@ public class MemeController {
     CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
     memeService.uploadMeme(uploadDto, userDetails);
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * 밈 게시글 수정 하는 기능
+   *
+   */
+  @PostMapping("/update")
+  @PreAuthorize("hasRole('USER')")
+  public ResponseEntity<String> uploadMeme(@RequestBody MemeUpdateDto uploadDto) {
+    // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+
+    memeService.updateMeme(uploadDto, userDetails);
     return ResponseEntity.ok().build();
   }
 

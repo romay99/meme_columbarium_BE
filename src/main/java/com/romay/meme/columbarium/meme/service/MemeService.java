@@ -9,10 +9,7 @@ import com.romay.meme.columbarium.like.repository.LikeRepository;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import com.romay.meme.columbarium.member.entity.Member;
 import com.romay.meme.columbarium.member.repository.MemberRepository;
-import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeListDto;
-import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
+import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import java.time.LocalDateTime;
@@ -142,5 +139,19 @@ public class MemeService {
       response.add(responseDto);
     }
     return response;
+  }
+
+  public void updateMeme(MemeUpdateDto uploadDto, CustomUserDetails userDetails) {
+    // TODO 밈 수정하는 기능 만들어야함
+
+    // 1수정할 글과 JWT 토큰 유저 검증? ( 사용자가 익명사용자인지만 체크하면 될듯?? )
+
+    //2 수정 기록 남기기
+
+    //3 수정하기
+
+    //4 로그 남기기
+
+
   }
 }
