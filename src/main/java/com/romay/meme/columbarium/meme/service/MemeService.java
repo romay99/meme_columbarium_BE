@@ -3,13 +3,19 @@ package com.romay.meme.columbarium.meme.service;
 import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
 import com.romay.meme.columbarium.category.entity.Category;
 import com.romay.meme.columbarium.category.repository.CategoryRepository;
+import com.romay.meme.columbarium.exception.MemberNotFoundException;
 import com.romay.meme.columbarium.exception.MemeNotFoundException;
+import com.romay.meme.columbarium.like.repository.LikeRepository;
+import com.romay.meme.columbarium.member.dto.CustomUserDetails;
+import com.romay.meme.columbarium.member.entity.Member;
+import com.romay.meme.columbarium.member.repository.MemberRepository;
 import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeListDto;
 import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
 import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -27,12 +34,14 @@ public class MemeService {
 
   private final MemeRepository memeRepository;
   private final CategoryRepository categoryRepository;
+  private final MemberRepository memberRepository;
+  private final LikeRepository likeRepository;
 
   public MemeListResponseDto getMemeList(int page) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
     Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
 
-    Page<Meme> memePage = memeRepository.findAll(pageable);
+    Page<Meme> memePage = memeRepository.findAllWithCategory(pageable);
 
     // DTO 로 변환
     List<MemeListDto> dtoList = memePage.getContent()
@@ -43,6 +52,8 @@ public class MemeService {
                   .title(item.getTitle())
                   .startDate(item.getStartDate())
                   .endDate(item.getEndDate())
+                  .category(item.getCategory().getName())
+                  .categoryCode(item.getCategory().getCode())
                   .build();
             }
         ).toList();
@@ -67,22 +78,55 @@ public class MemeService {
     return "https://placehold.co/600x400"; // 임시 이미지 url return
   }
 
-  public MemeDetailResponseDto getMemeInfo(Long memeCode) {
+  public MemeDetailResponseDto getMemeInfo(Long memeCode, CustomUserDetails userDetails) {
     Meme meme = memeRepository.findById(memeCode)
         .orElseThrow(() -> new MemeNotFoundException("존재하지 않는 밈 입니다."));
 
     MemeDetailResponseDto dto = MemeDetailResponseDto.memeEntityToDto(meme);
+    Member author = memberRepository.findById(dto.getAuthorCode()).orElseThrow(
+        () -> new MemberNotFoundException("존재하지 않는 글 작성자입니다.")
+    );
+
+    dto.setAuthorNickName(author.getNickname()); // DTO 에 작성자 닉네임 추가
 
     // Category 이름 가져오기
     Category category = categoryRepository.findById(meme.getCategoryCode()).get();
     dto.setCategory(category.getName());
 
+    if (userDetails != null) {
+      // 좋아요 했는지 여부 조회
+      dto.setLikes(likeRepository.
+          existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), memeCode));
+    }
+
+    dto.setLikesCount(likeRepository.countByMemeCode(memeCode)); // 좋아요 총 갯수 조회
+
     return dto; // DTO 로 변환 후 return
   }
 
-  public void uploadMeme(MemeUploadDto uploadDto) {
-    log.info("memeUpload!" + uploadDto.getTitle());
-    System.out.println(uploadDto);
+  @Transactional
+  public void uploadMeme(MemeUploadDto uploadDto, CustomUserDetails userDetails) {
+    // TODO 썸네일 업로드 기능 만들어야함
+
+    Meme meme = Meme.builder()
+//      .thumbnail(thumbnail) 썸네일 업로드 기능 만들쟈
+        .authorCode(userDetails.getMember().getCode())
+        .startDate(uploadDto.getStartDate())
+        .endDate(uploadDto.getEndDate())
+        .contents(uploadDto.getContents())
+        .title(uploadDto.getTitle())
+        .categoryCode(uploadDto.getCategory())
+        .createdAt(LocalDateTime.now())
+        .version(1L)
+        .latest(true)
+        .build();
+
+    memeRepository.save(meme); // DB 에 save
+    meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
+
+    log.info("memeUpload! : " + uploadDto.getTitle() + " author : " + userDetails.getMember()
+        .getNickname());
+
   }
 
   public List<CategoryResponseDto> getCategories() {
