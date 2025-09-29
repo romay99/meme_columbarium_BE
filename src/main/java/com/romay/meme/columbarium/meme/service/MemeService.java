@@ -141,17 +141,42 @@ public class MemeService {
     return response;
   }
 
-  public void updateMeme(MemeUpdateDto uploadDto, CustomUserDetails userDetails) {
+  @Transactional
+  public void updateMeme(MemeUpdateDto dto, CustomUserDetails userDetails) {
     // TODO 밈 수정하는 기능 만들어야함
 
     // 1수정할 글과 JWT 토큰 유저 검증? ( 사용자가 익명사용자인지만 체크하면 될듯?? )
 
     //2 수정 기록 남기기
+    // 새로운 글을 남기는 것으로 수정 기록을 남긴다.
+    // 추후 동시성 문제 해결해야 함
 
     //3 수정하기
+    Meme orgMeme = memeRepository.findById(dto.getCode()).orElseThrow(
+        () -> new MemeNotFoundException("존재하지 않는 밈 입니다.")
+    );
+
+    Meme newMeme = Meme.builder()
+        .title(dto.getTitle())
+        .contents(dto.getContents())
+        .startDate(dto.getStartDate())
+        .endDate(dto.getEndDate())
+        .orgMemeCode(orgMeme.getCode())
+        .version(orgMeme.getVersion() + 1)
+        .createdAt(orgMeme.getCreatedAt())
+        .updatedAt(LocalDateTime.now())
+        .categoryCode(dto.getCategory())
+        .authorCode(orgMeme.getAuthorCode())
+        .updaterCode(userDetails.getMember().getCode())
+        .latest(true)
+        .build();
+
+    memeRepository.save(newMeme); // 새로운 밈 insert
+    orgMeme.setLatest(false); // 기존 밈 latest 변수 false 로 변경
 
     //4 로그 남기기
-
+    log.info(
+        "Meme updated : = " + dto.getCode() + " by " + userDetails.getMember().getCode() + " User");
 
   }
 }

@@ -11,6 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface MemeRepository extends JpaRepository<Meme, Long> {
 
   // Fetch Join 으로 카테고리까지 한번에 가져오자
-  @Query("SELECT m from Meme m JOIN FETCH m.category ORDER BY m.createdAt DESC")
+  @Query("SELECT m from Meme m JOIN FETCH m.category WHERE m.latest = true ORDER BY m.createdAt DESC")
   Page<Meme> findAllWithCategory(Pageable pageable);
 }
