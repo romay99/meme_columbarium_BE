@@ -2,10 +2,7 @@ package com.romay.meme.columbarium.meme.controller;
 
 import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
-import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeUpdateDto;
-import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
+import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.service.MemeService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -109,5 +106,20 @@ public class MemeController {
   public ResponseEntity<List<CategoryResponseDto>> getCategories() {
     List<CategoryResponseDto> categories = memeService.getCategories();
     return ResponseEntity.ok(categories);
+  }
+
+  /**
+   * 밈 게시판 수정 히스토리 호출 API
+   *
+   * @param page 조회할 페이지 번호
+   * @return page 번호에 해당하는 밈 리스트 return
+   */
+  @GetMapping("/histroy")
+  public ResponseEntity<MemeUpdateHistoryListDto> getMemeList(
+          @RequestParam(name = "page") int page,
+          @RequestParam("code") Long memeCode
+  ) {
+    MemeUpdateHistoryListDto memeList = memeService.getUpdateHistoryList(page,memeCode);// 호출
+    return ResponseEntity.ok(memeList);
   }
 }
