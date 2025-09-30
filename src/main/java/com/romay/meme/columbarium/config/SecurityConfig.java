@@ -62,7 +62,7 @@ public class SecurityConfig {
             .requestMatchers("/meme/categories", "/meme/info", "/meme/list",
                 "/member/login", "/member/signup", "/member/check-id/**", "/meme/info/**",
                 "/comment/meme/list", "/board/list", "/board/info", "/comment/board/list",
-                    "/meme/histroy")
+                    "/meme/history")
             .permitAll()
             .anyRequest().authenticated()
         )

@@ -18,4 +18,5 @@ public class MemeUpdateHistoryDto {
     private Long categoryCode;
     private String modifier;
     private LocalDateTime updateAt;
+    private Long version;
 }

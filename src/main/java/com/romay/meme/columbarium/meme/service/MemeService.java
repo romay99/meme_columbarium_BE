@@ -198,6 +198,7 @@ public class MemeService {
                               .categoryCode(item.getCategory().getCode())
                               .modifier(item.getMember().getNickname())
                               .updateAt(item.getUpdatedAt())
+                              .version(item.getVersion())
                               .build();
                     }
             ).toList();

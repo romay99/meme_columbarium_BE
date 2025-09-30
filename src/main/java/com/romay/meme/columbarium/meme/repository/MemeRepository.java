@@ -16,6 +16,6 @@ public interface MemeRepository extends JpaRepository<Meme, Long> {
   Page<Meme> findAllWithCategory(Pageable pageable);
 
   // Fetch Join 으로 수정자까지 한번에 가져오자
-  @Query("SELECT m from Meme m JOIN FETCH m.member WHERE m.latest = false AND m.code = :code ORDER BY m.version DESC")
+  @Query("SELECT m from Meme m JOIN FETCH m.member WHERE m.latest = false AND m.orgMemeCode = :code ORDER BY m.version DESC")
   Page<Meme> findHistory(Pageable pageable,@Param("code") Long memeCode);
 }

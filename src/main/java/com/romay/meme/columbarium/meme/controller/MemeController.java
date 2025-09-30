@@ -114,7 +114,7 @@ public class MemeController {
    * @param page 조회할 페이지 번호
    * @return page 번호에 해당하는 밈 리스트 return
    */
-  @GetMapping("/histroy")
+  @GetMapping("/history")
   public ResponseEntity<MemeUpdateHistoryListDto> getMemeList(
           @RequestParam(name = "page") int page,
           @RequestParam("code") Long memeCode
