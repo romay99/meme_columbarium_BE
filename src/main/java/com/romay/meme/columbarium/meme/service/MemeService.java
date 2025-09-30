@@ -161,7 +161,7 @@ public class MemeService {
         .contents(dto.getContents())
         .startDate(dto.getStartDate())
         .endDate(dto.getEndDate())
-        .orgMemeCode(orgMeme.getCode())
+        .orgMemeCode(orgMeme.getOrgMemeCode())
         .version(orgMeme.getVersion() + 1)
         .createdAt(orgMeme.getCreatedAt())
         .updatedAt(LocalDateTime.now())
@@ -184,31 +184,31 @@ public class MemeService {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
     Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
 
-    Page<Meme> memePage = memeRepository.findHistory(pageable,memeCode);
+    Page<Meme> memePage = memeRepository.findHistory(pageable, memeCode);
 
     // DTO 로 변환
     List<MemeUpdateHistoryDto> dtoList = memePage.getContent()
-            .stream().map(
-                    item -> {
-                      return MemeUpdateHistoryDto.builder()
-                              .title(item.getTitle())
-                              .startDate(item.getStartDate())
-                              .endDate(item.getEndDate())
-                              .category(item.getCategory().getName())
-                              .categoryCode(item.getCategory().getCode())
-                              .modifier(item.getMember().getNickname())
-                              .updateAt(item.getUpdatedAt())
-                              .version(item.getVersion())
-                              .build();
-                    }
-            ).toList();
+        .stream().map(
+            item -> {
+              return MemeUpdateHistoryDto.builder()
+                  .title(item.getTitle())
+                  .startDate(item.getStartDate())
+                  .endDate(item.getEndDate())
+                  .category(item.getCategory().getName())
+                  .categoryCode(item.getCategory().getCode())
+                  .modifier(item.getMember().getNickname())
+                  .updateAt(item.getUpdatedAt())
+                  .version(item.getVersion())
+                  .build();
+            }
+        ).toList();
 
     MemeUpdateHistoryListDto dto = MemeUpdateHistoryListDto.builder()
-            .data(dtoList)
-            .page(page)
-            .totalPages(memePage.getTotalPages())
-            .totalCount(memePage.getTotalElements())
-            .build();
+        .data(dtoList)
+        .page(page)
+        .totalPages(memePage.getTotalPages())
+        .totalCount(memePage.getTotalElements())
+        .build();
     return dto;
   }
 }
