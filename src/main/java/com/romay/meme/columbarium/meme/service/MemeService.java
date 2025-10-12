@@ -34,11 +34,12 @@ public class MemeService {
   private final MemberRepository memberRepository;
   private final LikeRepository likeRepository;
 
-  public MemeListResponseDto getMemeList(int page) {
+  public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
     Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
+    Page<Meme> memePage = null;
 
-    Page<Meme> memePage = memeRepository.findAllWithCategory(pageable);
+    memePage = memeRepository.findBySearchAndSort(keyWord, sort, pageable);
 
     // DTO 로 변환
     List<MemeListDto> dtoList = memePage.getContent()
@@ -96,7 +97,7 @@ public class MemeService {
           existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), memeCode));
     }
 
-    dto.setLikesCount(likeRepository.countByMemeCode(memeCode)); // 좋아요 총 갯수 조회
+    dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
 
     return dto; // DTO 로 변환 후 return
   }
@@ -114,6 +115,7 @@ public class MemeService {
         .title(uploadDto.getTitle())
         .categoryCode(uploadDto.getCategory())
         .createdAt(LocalDateTime.now())
+        .likesCount(0)
         .version(1L)
         .latest(true)
         .build();

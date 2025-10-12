@@ -32,9 +32,13 @@ public class MemeController {
    */
   @GetMapping("/list")
   public ResponseEntity<MemeListResponseDto> getMemeList(
-      @RequestParam(name = "page") int page
+      @RequestParam(name = "page") int page,
+      @RequestParam(name = "sort") String sort,
+      @RequestParam(name = "keyWord", defaultValue = "") String keyWord
+
   ) {
-    MemeListResponseDto memeList = memeService.getMemeList(page);// 호출
+
+    MemeListResponseDto memeList = memeService.getMemeList(keyWord, page, sort);// 호출
     return ResponseEntity.ok(memeList);
   }
 
@@ -116,10 +120,10 @@ public class MemeController {
    */
   @GetMapping("/history")
   public ResponseEntity<MemeUpdateHistoryListDto> getMemeList(
-          @RequestParam(name = "page") int page,
-          @RequestParam("code") Long memeCode
+      @RequestParam(name = "page") int page,
+      @RequestParam("code") Long memeCode
   ) {
-    MemeUpdateHistoryListDto memeList = memeService.getUpdateHistoryList(page,memeCode);// 호출
+    MemeUpdateHistoryListDto memeList = memeService.getUpdateHistoryList(page, memeCode);// 호출
     return ResponseEntity.ok(memeList);
   }
 }

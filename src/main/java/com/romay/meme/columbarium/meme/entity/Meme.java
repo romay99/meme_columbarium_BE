@@ -57,6 +57,8 @@ public class Meme {
 
   private Boolean latest; // 가장 최신버전글인지
 
+  private Integer likesCount; // 좋아요 갯수
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "categoryCode", referencedColumnName = "code", insertable = false, updatable = false)
   private Category category;
