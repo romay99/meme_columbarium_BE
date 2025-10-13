@@ -4,11 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import java.util.Date;
-import java.util.List;
-import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.List;
 
 @Component
 public class JWTUtil {
@@ -16,61 +17,72 @@ public class JWTUtil {
   @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationThatIsVeryLongAndSecure123456789}")
   private String secretKey;
 
-  @Value("${jwt.expiration:3600000}")
-  private long expiration;
+  @Value("${jwt.accessExpiration:3600000}") // 1시간
+  private long accessExpiration;
+
+  @Value("${jwt.refreshExpiration:604800000}") // 7일
+  private long refreshExpiration;
 
   private SecretKey getSigningKey() {
     return Keys.hmacShaKeyFor(secretKey.getBytes());
   }
 
-  // JWT 토큰 생성
-  public String generateToken(String username, List<String> roles) {
-    Date now = new Date();
-    Date expiryDate = new Date(now.getTime() + expiration);
-
-    return Jwts.builder()
-        .setSubject(username)
-        .claim("roles", roles)
-        .setIssuedAt(now)
-        .setExpiration(expiryDate)
-        .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-        .compact();
+  // ==================== 액세스 토큰 ====================
+  public String generateAccessToken(String username, List<String> roles) {
+    return generateToken(username, roles, accessExpiration);
   }
 
-  // JWT 토큰에서 사용자명 추출
+  // ==================== 리프래시 토큰 ====================
+  public String generateRefreshToken(String username) {
+    // 리프래시 토큰은 보통 권한 정보 없이 username만 포함
+    return generateToken(username, null, refreshExpiration);
+  }
+
+  // ==================== 공통 토큰 생성 ====================
+  private String generateToken(String username, List<String> roles, long expirationMillis) {
+    Date now = new Date();
+    Date expiryDate = new Date(now.getTime() + expirationMillis);
+
+    var builder = Jwts.builder()
+            .setSubject(username)
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256);
+
+    if (roles != null) {
+      builder.claim("roles", roles);
+    }
+
+    return builder.compact();
+  }
+
+  // ==================== 기존 메서드 재사용 ====================
   public String getUsernameFromToken(String token) {
     return getClaimsFromToken(token).getSubject();
   }
 
-  // JWT 토큰에서 권한 추출
   @SuppressWarnings("unchecked")
   public List<String> getRolesFromToken(String token) {
     return (List<String>) getClaimsFromToken(token).get("roles");
   }
 
-  // JWT 토큰에서 만료일 추출
   public Date getExpirationDateFromToken(String token) {
     return getClaimsFromToken(token).getExpiration();
   }
 
-  // JWT 토큰에서 클레임 추출
   private Claims getClaimsFromToken(String token) {
     return Jwts.parser()
-        .setSigningKey(getSigningKey())
-        .build()
-        .parseClaimsJws(token)
-        .getBody();
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
   }
 
-  // JWT 토큰 만료 여부 확인
   public boolean isTokenExpired(String token) {
-    Date expiration = getExpirationDateFromToken(token);
-    return expiration.before(new Date());
+    return getExpirationDateFromToken(token).before(new Date());
   }
 
-  // JWT 토큰 유효성 검증
   public boolean validateToken(String token, String username) {
-    String tokenUsername = getUsernameFromToken(token);
-    return (tokenUsername.equals(username) && !isTokenExpired(token));
+    return getUsernameFromToken(token).equals(username) && !isTokenExpired(token);
   }
 }
