@@ -105,4 +105,26 @@ public class BoardService {
 
 
   }
+
+  public void updateBoard(BoardUpdateDto dto, CustomUserDetails userDetails) {
+    Board board = boardRepository.findById(dto.getCode()).orElseThrow(
+            () -> new BoardNotFoundException("존재하지 않는 게시글 입니다.")
+    );
+
+    if (board.getMember().getCode() != userDetails.getMember().getCode()) {
+      throw new MemberNotMatchException("자신의 글만 수정할 수 있습니다.");
+    }
+
+    Board update = Board.builder()
+            .code(board.getCode())
+            .title(dto.getTitle())
+            .contents(dto.getContents())
+            .createAt(board.getCreateAt())
+            .authorCode(board.getAuthorCode())
+            .member(board.getMember())
+            .build();
+
+    boardRepository.save(update);
+    log.info("Update Board : " + board.getTitle() + " By " + userDetails.getMember().getCode() + " User");
+  }
 }

@@ -30,7 +30,7 @@ public class MemeDetailResponseDto {
   private String authorNickName; // 작성자 닉네임
   private Long updaterCode; // 수정자 pk
 
-  private Long likesCount; // 총 좋아요 갯수
+  private Integer likesCount; // 총 좋아요 갯수
   private boolean isLikes; // 글 조회하는 유저가 좋아요 눌렀는지 여부
 
 

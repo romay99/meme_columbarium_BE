@@ -6,14 +6,11 @@ import com.romay.meme.columbarium.member.dto.SignUpRequest;
 import com.romay.meme.columbarium.member.service.AuthService;
 import java.util.HashMap;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/member")
@@ -29,9 +26,34 @@ public class MemberController {
    * @return
    */
   @PostMapping("/login")
-  public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-    LoginResponse result = authService.login(request);
+  public ResponseEntity<LoginResponse> login(
+          @RequestBody LoginRequest request,
+          HttpServletResponse response // ← 쿠키 전송용
+  ) {
+    LoginResponse result = authService.login(request, response); // HttpServletResponse 전달
     return ResponseEntity.ok().body(result);
+  }
+
+  /**
+   * 리프래시 토큰으로 액세스 토큰 재발급
+   *
+   * @param response 새 액세스 토큰을 담아서 반환
+   * @param refreshToken 쿠키에 담긴 HttpOnly 리프래시 토큰
+   * @return 새 액세스 토큰
+   */
+  @PostMapping("/refresh")
+  public ResponseEntity<Map<String, String>> refreshToken(
+          @CookieValue(name = "refreshToken", required = false) String refreshToken,
+          HttpServletResponse response
+  ) {
+    if (refreshToken == null) {
+      return ResponseEntity.status(401).body(Map.of("error", "Refresh token is missing"));
+    }
+
+    // 새 액세스 토큰 발급
+    String newAccessToken = authService.refreshAccessToken(refreshToken);
+
+    return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
   }
 
   /**

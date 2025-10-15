@@ -2,14 +2,11 @@ package com.romay.meme.columbarium.meme.controller;
 
 import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
-import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
+import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.service.MemeService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,9 +32,13 @@ public class MemeController {
    */
   @GetMapping("/list")
   public ResponseEntity<MemeListResponseDto> getMemeList(
-      @RequestParam(name = "page") int page
+      @RequestParam(name = "page") int page,
+      @RequestParam(name = "sort") String sort,
+      @RequestParam(name = "keyWord", defaultValue = "") String keyWord
+
   ) {
-    MemeListResponseDto memeList = memeService.getMemeList(page);// 호출
+
+    MemeListResponseDto memeList = memeService.getMemeList(keyWord, page, sort);// 호출
     return ResponseEntity.ok(memeList);
   }
 
@@ -66,7 +67,6 @@ public class MemeController {
    * @param file 프론트에서 날아온 이미지 파일
    * @return S3 에 저장된 이미지 URL Return
    */
-  @PreAuthorize("hasRole('USER')")
   @PostMapping("/image")
   public ResponseEntity<String> imageUpload(@RequestParam("file") MultipartFile file) {
     String imageUrl = memeService.imageUpload(file); // image upload
@@ -79,13 +79,25 @@ public class MemeController {
    * @param uploadDto 업로드 하는 DTO
    */
   @PostMapping("/upload")
-  @PreAuthorize("hasRole('USER')")
   public ResponseEntity<String> uploadMeme(@RequestBody MemeUploadDto uploadDto) {
     // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
     memeService.uploadMeme(uploadDto, userDetails);
+    return ResponseEntity.ok().build();
+  }
+
+  /**
+   * 밈 게시글 수정 하는 기능
+   */
+  @PostMapping("/update")
+  public ResponseEntity<String> uploadMeme(@RequestBody MemeUpdateDto uploadDto) {
+    // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+
+    memeService.updateMeme(uploadDto, userDetails);
     return ResponseEntity.ok().build();
   }
 
@@ -100,4 +112,18 @@ public class MemeController {
     return ResponseEntity.ok(categories);
   }
 
+  /**
+   * 밈 게시판 수정 히스토리 호출 API
+   *
+   * @param page 조회할 페이지 번호
+   * @return page 번호에 해당하는 밈 리스트 return
+   */
+  @GetMapping("/history")
+  public ResponseEntity<MemeUpdateHistoryListDto> getMemeList(
+      @RequestParam(name = "page") int page,
+      @RequestParam("code") Long memeCode
+  ) {
+    MemeUpdateHistoryListDto memeList = memeService.getUpdateHistoryList(page, memeCode);// 호출
+    return ResponseEntity.ok(memeList);
+  }
 }

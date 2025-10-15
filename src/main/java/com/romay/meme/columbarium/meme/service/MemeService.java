@@ -9,10 +9,7 @@ import com.romay.meme.columbarium.like.repository.LikeRepository;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import com.romay.meme.columbarium.member.entity.Member;
 import com.romay.meme.columbarium.member.repository.MemberRepository;
-import com.romay.meme.columbarium.meme.dto.MemeDetailResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeListDto;
-import com.romay.meme.columbarium.meme.dto.MemeListResponseDto;
-import com.romay.meme.columbarium.meme.dto.MemeUploadDto;
+import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import java.time.LocalDateTime;
@@ -37,11 +34,12 @@ public class MemeService {
   private final MemberRepository memberRepository;
   private final LikeRepository likeRepository;
 
-  public MemeListResponseDto getMemeList(int page) {
+  public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
     Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
+    Page<Meme> memePage = null;
 
-    Page<Meme> memePage = memeRepository.findAllWithCategory(pageable);
+    memePage = memeRepository.findBySearchAndSort(keyWord, sort, pageable);
 
     // DTO 로 변환
     List<MemeListDto> dtoList = memePage.getContent()
@@ -99,7 +97,7 @@ public class MemeService {
           existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), memeCode));
     }
 
-    dto.setLikesCount(likeRepository.countByMemeCode(memeCode)); // 좋아요 총 갯수 조회
+    dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
 
     return dto; // DTO 로 변환 후 return
   }
@@ -117,6 +115,7 @@ public class MemeService {
         .title(uploadDto.getTitle())
         .categoryCode(uploadDto.getCategory())
         .createdAt(LocalDateTime.now())
+        .likesCount(0)
         .version(1L)
         .latest(true)
         .build();
@@ -142,5 +141,76 @@ public class MemeService {
       response.add(responseDto);
     }
     return response;
+  }
+
+  @Transactional
+  public void updateMeme(MemeUpdateDto dto, CustomUserDetails userDetails) {
+    // TODO 밈 수정하는 기능 만들어야함
+
+    // 1수정할 글과 JWT 토큰 유저 검증? ( 사용자가 익명사용자인지만 체크하면 될듯?? )
+
+    //2 수정 기록 남기기
+    // 새로운 글을 남기는 것으로 수정 기록을 남긴다.
+    // 추후 동시성 문제 해결해야 함
+
+    //3 수정하기
+    Meme orgMeme = memeRepository.findById(dto.getCode()).orElseThrow(
+        () -> new MemeNotFoundException("존재하지 않는 밈 입니다.")
+    );
+
+    Meme newMeme = Meme.builder()
+        .title(dto.getTitle())
+        .contents(dto.getContents())
+        .startDate(dto.getStartDate())
+        .endDate(dto.getEndDate())
+        .orgMemeCode(orgMeme.getOrgMemeCode())
+        .version(orgMeme.getVersion() + 1)
+        .createdAt(orgMeme.getCreatedAt())
+        .updatedAt(LocalDateTime.now())
+        .categoryCode(dto.getCategory())
+        .authorCode(orgMeme.getAuthorCode())
+        .updaterCode(userDetails.getMember().getCode())
+        .latest(true)
+        .build();
+
+    memeRepository.save(newMeme); // 새로운 밈 insert
+    orgMeme.setLatest(false); // 기존 밈 latest 변수 false 로 변경
+
+    //4 로그 남기기
+    log.info(
+        "Meme updated : = " + dto.getCode() + " by " + userDetails.getMember().getCode() + " User");
+
+  }
+
+  public MemeUpdateHistoryListDto getUpdateHistoryList(int page, Long memeCode) {
+    int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
+    Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
+
+    Page<Meme> memePage = memeRepository.findHistory(pageable, memeCode);
+
+    // DTO 로 변환
+    List<MemeUpdateHistoryDto> dtoList = memePage.getContent()
+        .stream().map(
+            item -> {
+              return MemeUpdateHistoryDto.builder()
+                  .title(item.getTitle())
+                  .startDate(item.getStartDate())
+                  .endDate(item.getEndDate())
+                  .category(item.getCategory().getName())
+                  .categoryCode(item.getCategory().getCode())
+                  .modifier(item.getMember().getNickname())
+                  .updateAt(item.getUpdatedAt())
+                  .version(item.getVersion())
+                  .build();
+            }
+        ).toList();
+
+    MemeUpdateHistoryListDto dto = MemeUpdateHistoryListDto.builder()
+        .data(dtoList)
+        .page(page)
+        .totalPages(memePage.getTotalPages())
+        .totalCount(memePage.getTotalElements())
+        .build();
+    return dto;
   }
 }

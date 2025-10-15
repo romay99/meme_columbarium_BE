@@ -1,6 +1,7 @@
 package com.romay.meme.columbarium.meme.entity;
 
 import com.romay.meme.columbarium.category.entity.Category;
+import com.romay.meme.columbarium.member.entity.Member;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -56,8 +57,14 @@ public class Meme {
 
   private Boolean latest; // 가장 최신버전글인지
 
+  private Integer likesCount; // 좋아요 갯수
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "categoryCode", referencedColumnName = "code", insertable = false, updatable = false)
   private Category category;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "authorCode", referencedColumnName = "code", insertable = false, updatable = false)
+  private Member member;
 
 }
