@@ -7,16 +7,10 @@ import com.romay.meme.columbarium.member.dto.SignUpRequest;
 import com.romay.meme.columbarium.member.entity.Member;
 import com.romay.meme.columbarium.member.entity.Role;
 import com.romay.meme.columbarium.member.repository.MemberRepository;
-import com.romay.meme.columbarium.util.JWTUtil;
-import java.util.List;
-
+import com.romay.meme.columbarium.util.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,63 +18,54 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-  private final AuthenticationManager authenticationManager;
-  private final JWTUtil jwtUtil;
+  private final JwtTokenProvider jwtTokenProvider;
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
 
   public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
-    try {
-      // 인증 시도
-      Authentication authentication = authenticationManager.authenticate(
-              new UsernamePasswordAuthenticationToken(
-                      loginRequest.getId(),
-                      loginRequest.getPassword()
-              )
-      );
+    // 사용자 조회
+    Member member = memberRepository.findMemberById(loginRequest.getId())
+        .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
 
-      // 인증 성공 시 사용자 정보 조회
-      Member member = memberRepository.findMemberById(loginRequest.getId())
-              .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
-
-      // JWT 액세스 토큰 생성
-      String accessToken = jwtUtil.generateAccessToken(
-              member.getId(),
-              List.of(member.getRole().name())
-      );
-
-      // JWT 리프래시 토큰 생성
-      String refreshToken = jwtUtil.generateRefreshToken(member.getId());
-
-      // HttpOnly 쿠키로 리프래시 토큰 발급
-      Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-      refreshCookie.setHttpOnly(true);
-      refreshCookie.setSecure(true); // HTTPS 환경
-      refreshCookie.setPath("/");
-      refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
-      response.addCookie(refreshCookie);
-
-      // 액세스 토큰 + 사용자 정보 반환
-      return new LoginResponse(accessToken, member.getNickname());
-
-    } catch (AuthenticationException e) {
+    // 비밀번호 검증
+    if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
       throw new MemberNotFoundException("로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.");
     }
+
+    // JWT 액세스 토큰 생성
+    String accessToken = jwtTokenProvider.generateAccessToken(member.getId());
+
+    // JWT 리프래시 토큰 생성
+    String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId());
+
+    // HttpOnly 쿠키로 리프래시 토큰 발급
+    Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+    refreshCookie.setHttpOnly(true);
+//    refreshCookie.setSecure(true); // TODO 운영에는 true로!
+    refreshCookie.setSecure(false); // HTTPS 환경에서만 true
+    refreshCookie.setPath("/");
+    refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+    response.addCookie(refreshCookie);
+
+    // 액세스 토큰 + 사용자 정보 반환
+    return new LoginResponse(accessToken, member.getNickname());
   }
 
   public String refreshAccessToken(String refreshToken) {
     // 리프래시 토큰 검증
-    if (!jwtUtil.validateToken(refreshToken, jwtUtil.getUsernameFromToken(refreshToken))) {
-      throw new IllegalArgumentException("Invalid refresh token");
+    if (!jwtTokenProvider.validateToken(refreshToken)) {
+      throw new IllegalArgumentException("유효하지 않은 리프래시 토큰입니다.");
     }
 
-    String username = jwtUtil.getUsernameFromToken(refreshToken);
+    // 토큰에서 사용자명 추출
+    String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
 
+    // 사용자 존재 확인
     Member member = memberRepository.findMemberById(username)
-            .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
+        .orElseThrow(() -> new MemberNotFoundException("사용자를 찾을 수 없습니다."));
 
     // 새 액세스 토큰 발급
-    return jwtUtil.generateAccessToken(username, List.of(member.getRole().name()));
+    return jwtTokenProvider.generateAccessToken(username);
   }
 
   public void signUp(SignUpRequest request) {

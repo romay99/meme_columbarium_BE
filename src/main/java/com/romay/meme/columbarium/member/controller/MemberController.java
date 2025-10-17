@@ -27,8 +27,8 @@ public class MemberController {
    */
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(
-          @RequestBody LoginRequest request,
-          HttpServletResponse response // ← 쿠키 전송용
+      @RequestBody LoginRequest request,
+      HttpServletResponse response // ← 쿠키 전송용
   ) {
     LoginResponse result = authService.login(request, response); // HttpServletResponse 전달
     return ResponseEntity.ok().body(result);
@@ -37,14 +37,14 @@ public class MemberController {
   /**
    * 리프래시 토큰으로 액세스 토큰 재발급
    *
-   * @param response 새 액세스 토큰을 담아서 반환
+   * @param response     새 액세스 토큰을 담아서 반환
    * @param refreshToken 쿠키에 담긴 HttpOnly 리프래시 토큰
    * @return 새 액세스 토큰
    */
   @PostMapping("/refresh")
   public ResponseEntity<Map<String, String>> refreshToken(
-          @CookieValue(name = "refreshToken", required = false) String refreshToken,
-          HttpServletResponse response
+      @CookieValue(name = "refreshToken", required = false) String refreshToken,
+      HttpServletResponse response
   ) {
     if (refreshToken == null) {
       return ResponseEntity.status(401).body(Map.of("error", "Refresh token is missing"));
@@ -52,12 +52,14 @@ public class MemberController {
 
     // 새 액세스 토큰 발급
     String newAccessToken = authService.refreshAccessToken(refreshToken);
+    System.out.println("리프래시!");
 
     return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
   }
 
   /**
    * 회원가입 메서드
+   *
    * @param request
    * @return
    */
@@ -69,11 +71,12 @@ public class MemberController {
 
   /**
    * 아이디 중복체크 메서드
+   *
    * @param memberId
    * @return
    */
   @GetMapping("/check-id/{id}")
-  public ResponseEntity<Map<String,Boolean>> idCheck(@PathVariable("id")String memberId) {
+  public ResponseEntity<Map<String, Boolean>> idCheck(@PathVariable("id") String memberId) {
     boolean exist = authService.idCheck(memberId);
     HashMap<String, Boolean> map = new HashMap<>();
 
@@ -82,7 +85,7 @@ public class MemberController {
       return ResponseEntity.ok(map);
     }
 
-    map.put("available",false);
+    map.put("available", false);
     return ResponseEntity.badRequest().body(map);
   }
 }
