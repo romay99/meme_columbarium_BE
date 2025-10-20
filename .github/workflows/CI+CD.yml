@@ -18,10 +18,10 @@ jobs:
       - name: Ensure resources directory exists
         run: mkdir -p src/main/resources
 
-- name: Decode and create application.properties
-  run: |
-    printf "%s" "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.properties
-  shell: bash
+      - name: Decode and create application.properties
+        run: |
+          printf "%s" "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.properties
+        shell: bash
 
 
       # 3. JDK 및 Maven 설정
