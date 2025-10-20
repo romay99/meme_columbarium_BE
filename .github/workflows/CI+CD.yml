@@ -20,7 +20,7 @@ jobs:
 
       - name: Decode and create application.properties
         run: |
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" | tr -d '\n' | base64 --decode > src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.properties
         shell: bash
 
       # 3. JDK 및 Maven 설정
