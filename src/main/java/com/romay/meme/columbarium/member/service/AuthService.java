@@ -45,6 +45,7 @@ public class AuthService {
 //    refreshCookie.setSecure(false); // HTTPS 환경에서만 true
     refreshCookie.setPath("/");
     refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+    refreshCookie.setAttribute("SameSite", "None");
     response.addCookie(refreshCookie);
 
     // 액세스 토큰 + 사용자 정보 반환
