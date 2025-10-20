@@ -20,9 +20,8 @@ jobs:
 
       - name: Decode and create application.properties
         run: |
-          printf "%s" "${{ secrets.APPLICATION_PROPERTIES }}" | base64 --decode > src/main/resources/application.properties
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" | tr -d '\n' | base64 --decode > src/main/resources/application.properties
         shell: bash
-
 
       # 3. JDK 및 Maven 설정
       - name: Set up JDK 17
@@ -62,7 +61,16 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Docker 이미지 최신화
             docker pull romaydev/meme:latest
+            
+            # 기존 컨테이너 종료/삭제
             docker stop meme || true
             docker rm meme || true
-            docker run -d --name meme -p 8080:8080 romaydev/meme:latest
+
+            # 새로운 컨테이너 실행
+            docker run -d \
+              --name meme \
+              -p 8080:8080 \
+              --network meme-network \
+              romaydev/meme:latest
