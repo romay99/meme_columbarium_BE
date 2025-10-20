@@ -41,7 +41,13 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000"));
+
+    // 허용할 Origin 추가 (로컬 + Vercel)
+    configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:3000",
+            "https://meme-columbarium-fe.vercel.app"
+    ));
+
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
     configuration.setAllowCredentials(true);
@@ -50,6 +56,7 @@ public class SecurityConfig {
     source.registerCorsConfiguration("/**", configuration);
     return source;
   }
+
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
