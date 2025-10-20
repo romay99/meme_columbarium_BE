@@ -41,8 +41,8 @@ public class AuthService {
     // HttpOnly 쿠키로 리프래시 토큰 발급
     Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
     refreshCookie.setHttpOnly(true);
-//    refreshCookie.setSecure(true); // TODO 운영에는 true로!
-    refreshCookie.setSecure(false); // HTTPS 환경에서만 true
+    refreshCookie.setSecure(true); // TODO 운영에는 true로!
+//    refreshCookie.setSecure(false); // HTTPS 환경에서만 true
     refreshCookie.setPath("/");
     refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
     response.addCookie(refreshCookie);
