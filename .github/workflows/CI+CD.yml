@@ -50,7 +50,7 @@ jobs:
           push: true
           tags: |
             romaydev/meme:latest
-            # romaydev/meme:${{ github.sha }}
+            romaydev/meme:${{ github.sha }}
 
       # 7. EC2 서버에 SSH 접속 및 Docker Pull & Run
       - name: Deploy to EC2
