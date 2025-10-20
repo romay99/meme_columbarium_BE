@@ -44,7 +44,7 @@ public class SecurityConfig {
     CorsConfiguration configuration = new CorsConfiguration();
     configuration.setAllowedOriginPatterns(Arrays.asList(
         "http://localhost:3000",
-        "https://*.vercel.app"
+        "https://meme-columbarium-fe.vercel.app"
     ));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
