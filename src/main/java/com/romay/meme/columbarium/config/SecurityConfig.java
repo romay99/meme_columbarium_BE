@@ -61,19 +61,34 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-        .csrf(csrf -> csrf.disable())
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(authz -> authz
-            .requestMatchers("/meme/categories", "/meme/info", "/meme/list",
-                "/member/login", "/member/signup", "/member/check-id", "/meme/info",
-                "/comment/meme/list", "/board/list", "/board/info", "/comment/board/list",
-                    "/meme/history","/member/refresh")
-            .permitAll()
-            .anyRequest().authenticated()
-        )
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // CORS 적용
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // CSRF 비활성화 (API 서버용)
+            .csrf(csrf -> csrf.disable())
+            // JWT 사용 시 세션 상태 무시
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // 인증/권한 설정
+            .authorizeHttpRequests(authz -> authz
+                    .requestMatchers(
+                            "/meme/categories",
+                            "/meme/info",
+                            "/meme/list",
+                            "/member/login",
+                            "/member/signup",
+                            "/member/check-id/**",   // <--- 여기 수정됨
+                            "/comment/meme/list",
+                            "/board/list",
+                            "/board/info",
+                            "/comment/board/list",
+                            "/meme/history",
+                            "/member/refresh"
+                    ).permitAll()
+                    .anyRequest().authenticated()
+            )
+            // JWT 필터 적용
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            // OPTIONS 요청 허용
+            .httpBasic().disable();
 
     return http.build();
   }
