@@ -60,7 +60,7 @@ public class SecurityConfig {
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authz -> authz
             .requestMatchers("/meme/categories", "/meme/info", "/meme/list",
-                "/member/login", "/member/signup", "/member/check-id/**", "/meme/info/**",
+                "/member/login", "/member/signup", "/member/check-id", "/meme/info",
                 "/comment/meme/list", "/board/list", "/board/info", "/comment/board/list",
                     "/meme/history","/member/refresh")
             .permitAll()
