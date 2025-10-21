@@ -12,6 +12,7 @@ import com.romay.meme.columbarium.member.repository.MemberRepository;
 import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
+import com.romay.meme.columbarium.s3.service.S3Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,7 @@ public class MemeService {
   private final CategoryRepository categoryRepository;
   private final MemberRepository memberRepository;
   private final LikeRepository likeRepository;
+  private final S3Service s3Service;
 
   public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
@@ -68,12 +70,13 @@ public class MemeService {
 
   public String imageUpload(MultipartFile file) {
     try {
-      // TODO 이미지 업로드 구현해야함
-      log.info("image Upload Success : " + file.getOriginalFilename());
+      String uploadFileUrl = s3Service.uploadFile(file);
+
+      return uploadFileUrl;
     } catch (Exception e) {
       log.error("image Upload Error : " + e.getMessage());
     }
-    return "https://placehold.co/600x400"; // 임시 이미지 url return
+    return "";
   }
 
   public MemeDetailResponseDto getMemeInfo(Long memeCode, CustomUserDetails userDetails) {
