@@ -52,7 +52,6 @@ public class MemberController {
 
     // 새 액세스 토큰 발급
     String newAccessToken = authService.refreshAccessToken(refreshToken);
-    System.out.println("리프래시!");
 
     return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
   }
