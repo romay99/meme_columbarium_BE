@@ -16,6 +16,9 @@ import com.romay.meme.columbarium.s3.service.S3Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -70,7 +73,7 @@ public class MemeService {
 
   public String imageUpload(MultipartFile file) {
     try {
-      String uploadFileUrl = s3Service.uploadFile(file);
+      String uploadFileUrl = s3Service.uploadTempFile(file);
 
       return uploadFileUrl;
     } catch (Exception e) {
@@ -124,6 +127,19 @@ public class MemeService {
         .build();
 
     memeRepository.save(meme); // DB 에 save
+
+    Pattern pattern = Pattern.compile("https?://[^\\s)]+\\.(png|jpg|jpeg|gif)");
+    Matcher matcher = pattern.matcher(meme.getContents());
+
+    // S3 Copy tmp 파일을 -> 해당 meme 에 대한 이미지 파일로 변경
+    while (matcher.find()) {
+      String url = matcher.group();
+      if (url.contains("/temp/")) {
+        // 3️⃣ temp → posts/postId/ 이동 + URL 치환
+        String newUrl = s3Service.moveTempToPost(meme.getCode(), url);
+        meme.setContents(meme.getContents().replace(url, newUrl));
+      }
+    }
     meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
 
     log.info("memeUpload! : " + uploadDto.getTitle() + " author : " + userDetails.getMember()
