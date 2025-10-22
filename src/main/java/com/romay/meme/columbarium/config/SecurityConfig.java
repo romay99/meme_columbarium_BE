@@ -45,6 +45,7 @@ public class SecurityConfig {
     configuration.setAllowedOriginPatterns(Arrays.asList(
         "http://localhost:3000",
         "https://meme-columbarium-fe.vercel.app",
+        "https://www.ripmeme.co.kr",
         "https://ripmeme.co.kr"
     ));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
