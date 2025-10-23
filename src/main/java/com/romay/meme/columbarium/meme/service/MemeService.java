@@ -83,6 +83,7 @@ public class MemeService {
   }
 
   public MemeDetailResponseDto getMemeInfo(Long memeCode, CustomUserDetails userDetails) {
+    // TODO 여기부분 fetch join 으로 meme 이랑 member(작성자) 한번에 가져오자
     Meme meme = memeRepository.findById(memeCode)
         .orElseThrow(() -> new MemeNotFoundException("존재하지 않는 밈 입니다."));
 
@@ -100,7 +101,7 @@ public class MemeService {
     if (userDetails != null) {
       // 좋아요 했는지 여부 조회
       dto.setLikes(likeRepository.
-          existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), memeCode));
+          existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), meme.getOrgMemeCode()));
     }
 
     dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
@@ -186,6 +187,7 @@ public class MemeService {
         .updatedAt(LocalDateTime.now())
         .categoryCode(dto.getCategory())
         .authorCode(orgMeme.getAuthorCode())
+        .likesCount(orgMeme.getLikesCount())
         .updaterCode(userDetails.getMember().getCode())
         .latest(true)
         .build();
