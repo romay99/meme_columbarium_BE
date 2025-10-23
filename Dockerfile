@@ -19,5 +19,8 @@ COPY --from=builder /app/target/*.jar app.jar
 # 포트 설정 (Spring Boot 기본 8080)
 EXPOSE 8080
 
+# JVM 옵션 환경변수
+ENV JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul"
+
 # 실행 명령어
 ENTRYPOINT ["java", "-jar", "app.jar"]
