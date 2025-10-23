@@ -126,8 +126,6 @@ public class MemeService {
         .latest(true)
         .build();
 
-    memeRepository.save(meme); // DB 에 save
-
     Pattern pattern = Pattern.compile("https?://[^\\s)]+\\.(png|jpg|jpeg|gif)");
     Matcher matcher = pattern.matcher(meme.getContents());
 
@@ -136,7 +134,7 @@ public class MemeService {
       String url = matcher.group();
       if (url.contains("/temp/")) {
         // 3️⃣ temp → posts/postId/ 이동 + URL 치환
-        String newUrl = s3Service.moveTempToPost(meme.getCode(), url);
+        String newUrl = s3Service.moveTempToPost(meme.getOrgMemeCode(), url);
         meme.setContents(meme.getContents().replace(url, newUrl));
       }
     }
