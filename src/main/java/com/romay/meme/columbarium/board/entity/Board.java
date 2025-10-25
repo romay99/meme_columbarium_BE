@@ -20,7 +20,10 @@ public class Board {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long code;
   private String title;
+  @Lob
+  @Column(columnDefinition = "TEXT") // DB에 따라 필요시 추가
   private String contents;
+
   private LocalDateTime createAt;
 
   private Long authorCode; // 작성자 pk
