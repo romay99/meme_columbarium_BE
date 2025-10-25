@@ -14,6 +14,7 @@ import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import com.romay.meme.columbarium.s3.service.S3Service;
 import com.romay.meme.columbarium.util.JwtTokenProvider;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -103,8 +104,25 @@ public class MemeService {
 
     // 좋아요 했는지 안했는지 여부 체크
     String jwt = jwtTokenProvider.getJwtFromRequest(request);
-    if (jwt != null && jwtTokenProvider.validateToken(jwt)) {
-      String username = jwtTokenProvider.getUsernameFromToken(jwt);
+    boolean token = false;
+    String newAccessToken = null;
+
+    try {
+      jwtTokenProvider.validateTokenForGetMemeInfo(jwt);
+      token = true;
+    } catch (ExpiredJwtException e) {
+      // 액세스 토큰이 만료되었을 경우 새로 발급받아서 줌
+      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
+      newAccessToken = jwtTokenProvider.generateAccessToken(username);
+      dto.setNewAccessToken(newAccessToken);
+      token = true;
+    } catch (Exception e) {
+      token = false;
+    }
+
+    if (token) { // 정상적인 토큰이거나, 토큰을 새로 발급했을때에만 좋아요 여부 조회
+      // 어차피 인증 성공했기 때문에 만료 버전으로 사용자명 추출
+      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
       Member member = memberRepository.findMemberById(username).orElseThrow(
           () -> new MemberNotFoundException("존재하지 않는 사용자입니다.")
       );
