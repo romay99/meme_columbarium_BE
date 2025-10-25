@@ -5,6 +5,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
@@ -27,6 +28,15 @@ public class JwtTokenProvider {
   private Key getSigningKey() {
     byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
     return Keys.hmacShaKeyFor(keyBytes);
+  }
+
+  // Authorization 헤더에서 Bearer 토큰 추출
+  public String getJwtFromRequest(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
+    if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+      return bearerToken.substring(7);
+    }
+    return null;
   }
 
   // Access Token 생성
