@@ -118,11 +118,10 @@ public class MemeService {
   }
 
   @Transactional
-  public void uploadMeme(MemeUploadDto uploadDto, CustomUserDetails userDetails) {
-    // TODO 썸네일 업로드 기능 만들어야함
+  public void uploadMeme(MemeUploadDto uploadDto, CustomUserDetails userDetails,
+      MultipartFile thumbnail) {
 
     Meme meme = Meme.builder()
-//      .thumbnail(thumbnail) 썸네일 업로드 기능 만들쟈
         .authorCode(userDetails.getMember().getCode())
         .startDate(uploadDto.getStartDate())
         .endDate(uploadDto.getEndDate())
@@ -137,6 +136,9 @@ public class MemeService {
 
     memeRepository.save(meme);
     meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
+
+    String thumbnailUrl = s3Service.uploadThumbnailFile(thumbnail, meme.getOrgMemeCode());
+    meme.setThumbnail(thumbnailUrl); // 썸네일 URL 설정
 
     Pattern pattern = Pattern.compile("https?://[^\\s)]+\\.(png|jpg|jpeg|gif)");
     Matcher matcher = pattern.matcher(meme.getContents());

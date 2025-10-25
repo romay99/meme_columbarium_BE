@@ -42,29 +42,48 @@ public class S3Service {
   public void init() {
     BasicAWSCredentials creds = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
     s3client = AmazonS3ClientBuilder.standard()
-            .withRegion(Regions.fromName(awsRegion))
-            .withCredentials(new AWSStaticCredentialsProvider(creds))
-            .build();
+        .withRegion(Regions.fromName(awsRegion))
+        .withCredentials(new AWSStaticCredentialsProvider(creds))
+        .build();
   }
 
-  /** temp 업로드 */
+  /**
+   * temp 업로드
+   */
   public String uploadTempFile(MultipartFile file) {
     File convertFile = convertMultiPartToFile(file);
     String fileName = "temp/" + generateFileName(file);
     s3client.putObject(new PutObjectRequest(bucketName, fileName, convertFile)
-            .withCannedAcl(CannedAccessControlList.PublicRead));
+        .withCannedAcl(CannedAccessControlList.PublicRead));
     convertFile.delete();
     log.info("Temp Upload Success : " + file.getOriginalFilename());
     return s3client.getUrl(bucketName, fileName).toString();
   }
 
-  /** S3 객체 삭제 */
+  /**
+   * thumbnail 업로드
+   */
+  public String uploadThumbnailFile(MultipartFile file, Long memeCode) {
+    File convertFile = convertMultiPartToFile(file);
+    String fileName = "thumbnail/" + memeCode + "/" + generateFileName(file);
+    s3client.putObject(new PutObjectRequest(bucketName, fileName, convertFile)
+        .withCannedAcl(CannedAccessControlList.PublicRead));
+    convertFile.delete();
+    log.info("Temp thumbnail Success : " + file.getOriginalFilename());
+    return s3client.getUrl(bucketName, fileName).toString();
+  }
+
+  /**
+   * S3 객체 삭제
+   */
   public void deleteFile(String fileKey) {
     s3client.deleteObject(new DeleteObjectRequest(bucketName, fileKey));
     log.info("Deleted S3 Object : " + fileKey);
   }
 
-  /** S3 copy (임시 → 정식 경로) */
+  /**
+   * S3 copy (임시 → 정식 경로)
+   */
   public String moveTempToPost(Long postId, String tempUrl) {
     String tempKey = tempUrl.substring(tempUrl.indexOf("/temp/") + 1); // temp/uuid.png
     String postKey = "posts/" + postId + "/" + tempKey.substring(tempKey.indexOf("/") + 1);
@@ -82,7 +101,8 @@ public class S3Service {
   }
 
   private File convertMultiPartToFile(MultipartFile file) {
-    File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
+    File convFile = new File(
+        System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
     try (FileOutputStream fos = new FileOutputStream(convFile)) {
       fos.write(file.getBytes());
     } catch (IOException e) {
