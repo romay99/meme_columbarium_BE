@@ -90,6 +90,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         path.startsWith("/board/info") ||
         path.startsWith("/comment/board/list") ||
         path.startsWith("/meme/history") ||
-        path.startsWith("/member/refresh");
+        path.startsWith("/member/refresh") ||
+        path.startsWith("/member/check-nick-name");
   }
 }

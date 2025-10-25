@@ -5,6 +5,7 @@ import com.romay.meme.columbarium.member.dto.LoginResponse;
 import com.romay.meme.columbarium.member.dto.SignUpRequest;
 import com.romay.meme.columbarium.member.service.AuthService;
 import jakarta.servlet.http.Cookie;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +21,11 @@ public class MemberController {
 
   private final AuthService authService;
 
+  /**
+   * 토큰 유효성 검사
+   *
+   * @return
+   */
   @PostMapping("/check-verify")
   public ResponseEntity<String> checkVerify() {
     // 단순 토큰 검사용 api
@@ -42,6 +48,12 @@ public class MemberController {
     return ResponseEntity.ok().body(result);
   }
 
+  /**
+   * 로그아웃 하는 메서드
+   *
+   * @param response
+   * @return
+   */
   @PostMapping("/logout")
   public ResponseEntity<String> logout(HttpServletResponse response) {
 
@@ -109,5 +121,17 @@ public class MemberController {
 
     map.put("available", false);
     return ResponseEntity.badRequest().body(map);
+  }
+
+  /**
+   * 닉네임 중복체크 메서드
+   *
+   * @param nickname
+   * @return
+   */
+  @GetMapping("/check-nick-name/{nickname}")
+  public Map<String, Boolean> checkNickname(@PathVariable String nickname) {
+    boolean exist = authService.isNicknameAvailable(nickname);
+    return Collections.singletonMap("available", !exist); // { "available": true/false }
   }
 }

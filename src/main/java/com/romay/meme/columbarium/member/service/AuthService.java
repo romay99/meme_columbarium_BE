@@ -89,4 +89,8 @@ public class AuthService {
   public boolean idCheck(String memberId) {
     return memberRepository.existsMemberById(memberId);
   }
+
+  public boolean isNicknameAvailable(String nickname) {
+    return memberRepository.existsMemberByNickname(nickname);
+  }
 }
