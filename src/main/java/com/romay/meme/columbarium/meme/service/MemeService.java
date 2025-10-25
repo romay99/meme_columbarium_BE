@@ -122,7 +122,6 @@ public class MemeService {
       MultipartFile thumbnail) {
 
     Meme meme = Meme.builder()
-//      .thumbnail(thumbnail) 썸네일 업로드 기능 만들쟈
         .authorCode(userDetails.getMember().getCode())
         .startDate(uploadDto.getStartDate())
         .endDate(uploadDto.getEndDate())
