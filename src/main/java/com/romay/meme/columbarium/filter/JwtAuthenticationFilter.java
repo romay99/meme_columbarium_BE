@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     try {
       // 1. Authorization 헤더에서 JWT 토큰 추출
-      String jwt = getJwtFromRequest(request);
+      String jwt = tokenProvider.getJwtFromRequest(request);
 
       // 2. 토큰이 있고 유효한 경우
       if (jwt != null && tokenProvider.validateToken(jwt)) {
@@ -68,14 +68,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
   }
 
-  // Authorization 헤더에서 Bearer 토큰 추출
-  private String getJwtFromRequest(HttpServletRequest request) {
-    String bearerToken = request.getHeader("Authorization");
-    if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-      return bearerToken.substring(7);
-    }
-    return null;
-  }
 
   // JwtAuthenticationFilter 내부
   @Override

@@ -13,9 +13,14 @@ import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import com.romay.meme.columbarium.s3.service.S3Service;
+import com.romay.meme.columbarium.util.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +40,7 @@ public class MemeService {
   private final MemberRepository memberRepository;
   private final LikeRepository likeRepository;
   private final S3Service s3Service;
+  private final JwtTokenProvider jwtTokenProvider;
 
   public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
@@ -70,7 +76,7 @@ public class MemeService {
 
   public String imageUpload(MultipartFile file) {
     try {
-      String uploadFileUrl = s3Service.uploadFile(file);
+      String uploadFileUrl = s3Service.uploadTempFile(file);
 
       return uploadFileUrl;
     } catch (Exception e) {
@@ -79,7 +85,8 @@ public class MemeService {
     return "";
   }
 
-  public MemeDetailResponseDto getMemeInfo(Long memeCode, CustomUserDetails userDetails) {
+  public MemeDetailResponseDto getMemeInfo(Long memeCode, HttpServletRequest request) {
+    // TODO 여기부분 fetch join 으로 meme 이랑 member(작성자) 한번에 가져오자
     Meme meme = memeRepository.findById(memeCode)
         .orElseThrow(() -> new MemeNotFoundException("존재하지 않는 밈 입니다."));
 
@@ -94,10 +101,15 @@ public class MemeService {
     Category category = categoryRepository.findById(meme.getCategoryCode()).get();
     dto.setCategory(category.getName());
 
-    if (userDetails != null) {
-      // 좋아요 했는지 여부 조회
+    // 좋아요 했는지 안했는지 여부 체크
+    String jwt = jwtTokenProvider.getJwtFromRequest(request);
+    if (jwt != null && jwtTokenProvider.validateToken(jwt)) {
+      String username = jwtTokenProvider.getUsernameFromToken(jwt);
+      Member member = memberRepository.findMemberById(username).orElseThrow(
+          () -> new MemberNotFoundException("존재하지 않는 사용자입니다.")
+      );
       dto.setLikes(likeRepository.
-          existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), memeCode));
+          existsByMemberCodeAndMemeCode(member.getCode(), meme.getOrgMemeCode()));
     }
 
     dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
@@ -123,8 +135,21 @@ public class MemeService {
         .latest(true)
         .build();
 
-    memeRepository.save(meme); // DB 에 save
+    memeRepository.save(meme);
     meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
+
+    Pattern pattern = Pattern.compile("https?://[^\\s)]+\\.(png|jpg|jpeg|gif)");
+    Matcher matcher = pattern.matcher(meme.getContents());
+
+    // S3 Copy tmp 파일을 -> 해당 meme 에 대한 이미지 파일로 변경
+    while (matcher.find()) {
+      String url = matcher.group();
+      if (url.contains("/temp/")) {
+        // 3️⃣ temp → posts/postId/ 이동 + URL 치환
+        String newUrl = s3Service.moveTempToPost(meme.getOrgMemeCode(), url);
+        meme.setContents(meme.getContents().replace(url, newUrl));
+      }
+    }
 
     log.info("memeUpload! : " + uploadDto.getTitle() + " author : " + userDetails.getMember()
         .getNickname());
@@ -172,6 +197,7 @@ public class MemeService {
         .updatedAt(LocalDateTime.now())
         .categoryCode(dto.getCategory())
         .authorCode(orgMeme.getAuthorCode())
+        .likesCount(orgMeme.getLikesCount())
         .updaterCode(userDetails.getMember().getCode())
         .latest(true)
         .build();

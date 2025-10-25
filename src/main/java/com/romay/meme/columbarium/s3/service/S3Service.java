@@ -6,6 +6,8 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CopyObjectRequest;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,29 +42,47 @@ public class S3Service {
   public void init() {
     BasicAWSCredentials creds = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
     s3client = AmazonS3ClientBuilder.standard()
-        .withRegion(Regions.fromName(awsRegion))
-        .withCredentials(new AWSStaticCredentialsProvider(creds))
-        .build();
+            .withRegion(Regions.fromName(awsRegion))
+            .withCredentials(new AWSStaticCredentialsProvider(creds))
+            .build();
   }
 
-  public String uploadFile(MultipartFile file) {
+  /** temp 업로드 */
+  public String uploadTempFile(MultipartFile file) {
     File convertFile = convertMultiPartToFile(file);
-    String fileName = generateFileName(file);
+    String fileName = "temp/" + generateFileName(file);
     s3client.putObject(new PutObjectRequest(bucketName, fileName, convertFile)
-        .withCannedAcl(CannedAccessControlList.PublicRead));
+            .withCannedAcl(CannedAccessControlList.PublicRead));
     convertFile.delete();
-    log.info("image Upload Success : " + file.getOriginalFilename());
+    log.info("Temp Upload Success : " + file.getOriginalFilename());
     return s3client.getUrl(bucketName, fileName).toString();
   }
 
-  public void deleteFile(String fileUrl) {
-    String fileKey = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-    s3client.deleteObject(bucketName, fileKey);
+  /** S3 객체 삭제 */
+  public void deleteFile(String fileKey) {
+    s3client.deleteObject(new DeleteObjectRequest(bucketName, fileKey));
+    log.info("Deleted S3 Object : " + fileKey);
+  }
+
+  /** S3 copy (임시 → 정식 경로) */
+  public String moveTempToPost(Long postId, String tempUrl) {
+    String tempKey = tempUrl.substring(tempUrl.indexOf("/temp/") + 1); // temp/uuid.png
+    String postKey = "posts/" + postId + "/" + tempKey.substring(tempKey.indexOf("/") + 1);
+
+    // Copy
+    CopyObjectRequest copyReq = new CopyObjectRequest(bucketName, tempKey, bucketName, postKey);
+    s3client.copyObject(copyReq);
+
+    // Delete original temp
+    deleteFile(tempKey);
+
+    String postUrl = s3client.getUrl(bucketName, postKey).toString();
+    log.info("Moved temp {} → post {} ", tempUrl, postUrl);
+    return postUrl;
   }
 
   private File convertMultiPartToFile(MultipartFile file) {
-    File convFile = new File(
-        System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
+    File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + file.getOriginalFilename());
     try (FileOutputStream fos = new FileOutputStream(convFile)) {
       fos.write(file.getBytes());
     } catch (IOException e) {
@@ -72,6 +92,14 @@ public class S3Service {
   }
 
   private String generateFileName(MultipartFile file) {
-    return UUID.randomUUID().toString();
+    return UUID.randomUUID().toString() + getFileExtension(file.getOriginalFilename());
+  }
+
+  private String getFileExtension(String filename) {
+    int dotIndex = filename.lastIndexOf(".");
+    if (dotIndex != -1) {
+      return filename.substring(dotIndex);
+    }
+    return "";
   }
 }
