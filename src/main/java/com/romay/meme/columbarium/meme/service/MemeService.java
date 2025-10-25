@@ -13,6 +13,8 @@ import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import com.romay.meme.columbarium.s3.service.S3Service;
+import com.romay.meme.columbarium.util.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,7 @@ public class MemeService {
   private final MemberRepository memberRepository;
   private final LikeRepository likeRepository;
   private final S3Service s3Service;
+  private final JwtTokenProvider jwtTokenProvider;
 
   public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
@@ -82,7 +85,7 @@ public class MemeService {
     return "";
   }
 
-  public MemeDetailResponseDto getMemeInfo(Long memeCode, CustomUserDetails userDetails) {
+  public MemeDetailResponseDto getMemeInfo(Long memeCode, HttpServletRequest request) {
     // TODO 여기부분 fetch join 으로 meme 이랑 member(작성자) 한번에 가져오자
     Meme meme = memeRepository.findById(memeCode)
         .orElseThrow(() -> new MemeNotFoundException("존재하지 않는 밈 입니다."));
@@ -98,10 +101,15 @@ public class MemeService {
     Category category = categoryRepository.findById(meme.getCategoryCode()).get();
     dto.setCategory(category.getName());
 
-    if (userDetails != null) {
-      // 좋아요 했는지 여부 조회
+    // 좋아요 했는지 안했는지 여부 체크
+    String jwt = jwtTokenProvider.getJwtFromRequest(request);
+    if (jwt != null && jwtTokenProvider.validateToken(jwt)) {
+      String username = jwtTokenProvider.getUsernameFromToken(jwt);
+      Member member = memberRepository.findMemberById(username).orElseThrow(
+          () -> new MemberNotFoundException("존재하지 않는 사용자입니다.")
+      );
       dto.setLikes(likeRepository.
-          existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), meme.getOrgMemeCode()));
+          existsByMemberCodeAndMemeCode(member.getCode(), meme.getOrgMemeCode()));
     }
 
     dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
@@ -127,6 +135,9 @@ public class MemeService {
         .latest(true)
         .build();
 
+    memeRepository.save(meme);
+    meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
+
     Pattern pattern = Pattern.compile("https?://[^\\s)]+\\.(png|jpg|jpeg|gif)");
     Matcher matcher = pattern.matcher(meme.getContents());
 
@@ -139,7 +150,6 @@ public class MemeService {
         meme.setContents(meme.getContents().replace(url, newUrl));
       }
     }
-    meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
 
     log.info("memeUpload! : " + uploadDto.getTitle() + " author : " + userDetails.getMember()
         .getNickname());
