@@ -110,7 +110,6 @@ public class JwtTokenProvider {
     } catch (ExpiredJwtException e) {
       throw e; // 필터에서 처리하도록 다시 던짐
     } catch (Exception e) {
-      System.out.println("유효하지 않은 토큰: " + e.getMessage());
       return false;
     }
   }
@@ -126,7 +125,6 @@ public class JwtTokenProvider {
     } catch (ExpiredJwtException e) {
       throw e;
     } catch (Exception e) {
-      System.out.println("유효하지 않은 토큰: " + e.getMessage());
       return false;
     }
   }
