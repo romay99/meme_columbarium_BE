@@ -108,8 +108,10 @@ public class MemeService {
     String newAccessToken = null;
 
     try {
-      jwtTokenProvider.validateTokenForGetMemeInfo(jwt);
-      token = true;
+      boolean result = jwtTokenProvider.validateTokenForGetMemeInfo(jwt);
+      if (result) {
+        token = true; // 토큰이 정상적으로 검증되었을때에만 토큰 flag 를 true로 설정
+      }
     } catch (ExpiredJwtException e) {
       // 액세스 토큰이 만료되었을 경우 새로 발급받아서 줌
       String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
