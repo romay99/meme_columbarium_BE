@@ -221,6 +221,7 @@ public class MemeService {
         .authorCode(orgMeme.getAuthorCode())
         .likesCount(orgMeme.getLikesCount())
         .updaterCode(userDetails.getMember().getCode())
+        .thumbnail(orgMeme.getThumbnail())
         .latest(true)
         .build();
 
