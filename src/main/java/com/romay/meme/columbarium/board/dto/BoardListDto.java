@@ -10,9 +10,11 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 public class BoardListDto {
-    private Long code;
-    private String title;
-    private String contents;
-    private LocalDateTime createdAt;
-    private String authorNickName; // 글 작성자 닉네임
+
+  private Long code;
+  private String title;
+  private String contents;
+  private LocalDateTime createdAt;
+  private String authorNickName; // 글 작성자 닉네임
+  private boolean notice; // 공지 여부
 }
