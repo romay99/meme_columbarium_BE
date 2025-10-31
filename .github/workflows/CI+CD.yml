@@ -28,7 +28,6 @@ jobs:
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 -d > src/main/resources/application.properties
           echo "✅ application.properties created successfully"
-        shell: bash
 
       # 4. Maven 빌드
       - name: Build with Maven
@@ -48,7 +47,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          no-cache: true               # 🔹 캐시 무시
+          no-cache: true       # 🔹 캐시 무시
           tags: |
             romaydev/meme:latest
             romaydev/meme:${{ github.sha }}
@@ -75,7 +74,7 @@ jobs:
             docker stop meme || true
             docker rm meme || true
             
-            # 새로운 컨테이너 실행 (로그 디렉토리 연결)
+            # 새로운 컨테이너 실행
             echo "▶️ Starting new container..."
             docker run -d \
               --name meme \
