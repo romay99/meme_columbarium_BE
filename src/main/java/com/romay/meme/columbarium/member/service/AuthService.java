@@ -86,8 +86,6 @@ public class AuthService {
         .createdAt(LocalDateTime.now())
         .build();
 
-    System.out.println("member.getCreatedAt() = " + member.getCreatedAt());
-
     memberRepository.save(member);
   }
 
