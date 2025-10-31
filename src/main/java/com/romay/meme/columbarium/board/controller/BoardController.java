@@ -52,8 +52,6 @@ public class BoardController {
   public ResponseEntity<BoardListResponseDto> getBoardList(@RequestParam(name = "page") int page) {
     BoardListResponseDto boardList = boardService.getBoardList(page);
 
-    System.out.println(boardList.getData().get(0).isNotice());
-
     return ResponseEntity.ok().body(boardList);
   }
 
