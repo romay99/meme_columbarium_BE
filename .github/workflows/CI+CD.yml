@@ -41,13 +41,14 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      # 6. Docker 이미지 빌드 및 푸시
+      # 6. Docker 이미지 빌드 및 푸시 (캐시 무시)
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           push: true
+          no-cache: true               # 🔹 캐시 무시
           tags: |
             romaydev/meme:latest
             romaydev/meme:${{ github.sha }}
@@ -64,7 +65,7 @@ jobs:
             
             # EC2 로그 디렉토리 생성
             mkdir -p /home/ubuntu/logs
-
+            
             # Docker 이미지 최신화
             echo "📦 Pulling latest Docker image..."
             docker pull romaydev/meme:latest
