@@ -1,6 +1,7 @@
 package com.romay.meme.columbarium.board.repository;
 
 import com.romay.meme.columbarium.board.entity.Board;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,11 +16,15 @@ import java.util.Optional;
 public interface BoardRepository extends JpaRepository<Board, Long> {
 
   // Fetch Join 으로 멤버 닉네임까지 한번에 가져오자
-  @Query("SELECT b FROM Board b JOIN FETCH b.member")
+  @Query("SELECT b FROM Board b JOIN FETCH b.member WHERE b.isNotice = false")
   Page<Board> findAllWithMember(Pageable pageable);
 
   // Fetch Join 으로 작성자까지 한번에 가져오자
   @Query("SELECT b from Board b JOIN FETCH b.member"
       + " WHERE b.code = :code")
   Optional<Board> findByCodeWithMember(@Param("code") Long boardCode);
+
+  // ✅ 공지글만 가져오기 (최신순)
+  @Query("SELECT b FROM Board b JOIN FETCH b.member WHERE b.isNotice = true ORDER BY b.createAt DESC")
+  List<Board> findAllNoticeWithMember();
 }

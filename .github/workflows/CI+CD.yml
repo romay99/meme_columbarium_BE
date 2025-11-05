@@ -14,7 +14,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. JDK 설정 (application.properties 생성 전에 먼저 설정)
+      # 2. JDK 설정
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -22,13 +22,12 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      # 3. application.properties 디코딩
+      # 3. application.properties 생성
       - name: Create application.properties
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 -d > src/main/resources/application.properties
           echo "✅ application.properties created successfully"
-        shell: bash
 
       # 4. Maven 빌드
       - name: Build with Maven
@@ -41,18 +40,19 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      # 6. Docker 이미지 빌드 및 푸시
+      # 6. Docker 이미지 빌드 및 푸시 (캐시 무시)
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           push: true
+          no-cache: true       # 🔹 캐시 무시
           tags: |
             romaydev/meme:latest
             romaydev/meme:${{ github.sha }}
 
-      # 7. EC2 서버에 SSH 접속 및 Docker Pull & Run
+      # 7. EC2 서버 배포
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.8
         with:
@@ -61,6 +61,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "🚀 Starting deployment..."
+            
+            # EC2 로그 디렉토리 생성
+            mkdir -p /home/ubuntu/logs
             
             # Docker 이미지 최신화
             echo "📦 Pulling latest Docker image..."
@@ -78,6 +81,7 @@ jobs:
               -p 8080:8080 \
               --network meme-network \
               --restart unless-stopped \
+              -v /home/ubuntu/logs:/home/ubuntu/logs \
               romaydev/meme:latest
             
             # 컨테이너 상태 확인

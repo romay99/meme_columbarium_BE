@@ -4,6 +4,8 @@ import com.romay.meme.columbarium.member.dto.LoginRequest;
 import com.romay.meme.columbarium.member.dto.LoginResponse;
 import com.romay.meme.columbarium.member.dto.SignUpRequest;
 import com.romay.meme.columbarium.member.service.AuthService;
+import jakarta.servlet.http.Cookie;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +22,18 @@ public class MemberController {
   private final AuthService authService;
 
   /**
+   * 토큰 유효성 검사
+   *
+   * @return
+   */
+  @PostMapping("/check-verify")
+  public ResponseEntity<String> checkVerify() {
+    // 단순 토큰 검사용 api
+    // 필터에서 토큰을 검증하니 여기까지와서 아래 return 을 받아가면 토큰이 정상이라도 판정
+    return ResponseEntity.ok("인증 성공!");
+  }
+
+  /**
    * 로그인 하는 메서드
    *
    * @param request
@@ -33,6 +47,27 @@ public class MemberController {
     LoginResponse result = authService.login(request, response); // HttpServletResponse 전달
     return ResponseEntity.ok().body(result);
   }
+
+  /**
+   * 로그아웃 하는 메서드
+   *
+   * @param response
+   * @return
+   */
+  @PostMapping("/logout")
+  public ResponseEntity<String> logout(HttpServletResponse response) {
+
+    // HttpOnly 쿠키 삭제
+    Cookie cookie = new Cookie("refreshToken", null);
+    cookie.setHttpOnly(true);
+    cookie.setSecure(true); // https 환경이면 true
+    cookie.setPath("/");    // 전체 경로에서 쿠키 삭제
+    cookie.setMaxAge(0);    // 즉시 만료
+    response.addCookie(cookie);
+
+    return ResponseEntity.ok().body("{\"message\": \"로그아웃 성공\"}");
+  }
+
 
   /**
    * 리프래시 토큰으로 액세스 토큰 재발급
@@ -86,5 +121,17 @@ public class MemberController {
 
     map.put("available", false);
     return ResponseEntity.badRequest().body(map);
+  }
+
+  /**
+   * 닉네임 중복체크 메서드
+   *
+   * @param nickname
+   * @return
+   */
+  @GetMapping("/check-nick-name/{nickname}")
+  public Map<String, Boolean> checkNickname(@PathVariable String nickname) {
+    boolean exist = authService.isNicknameAvailable(nickname);
+    return Collections.singletonMap("available", !exist); // { "available": true/false }
   }
 }

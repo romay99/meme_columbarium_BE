@@ -4,16 +4,19 @@ import com.romay.meme.columbarium.category.dto.CategoryResponseDto;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.service.MemeService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,15 +52,11 @@ public class MemeController {
    * @return DTO 로 변환 후 리턴
    */
   @GetMapping("/info")
-  public ResponseEntity<MemeDetailResponseDto> getMemeInfo(@RequestParam("code") Long memeCode) {
-    // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    CustomUserDetails userDetails = null;
-    if (auth.getPrincipal() != "anonymousUser") {
-      userDetails = (CustomUserDetails) auth.getPrincipal();
-    }
+  public ResponseEntity<MemeDetailResponseDto> getMemeInfo(
+      @RequestParam("code") Long memeCode,
+      HttpServletRequest request) {
 
-    MemeDetailResponseDto memeInfo = memeService.getMemeInfo(memeCode, userDetails);
+    MemeDetailResponseDto memeInfo = memeService.getMemeInfo(memeCode, request);
     return ResponseEntity.ok(memeInfo);
   }
 
@@ -79,12 +78,14 @@ public class MemeController {
    * @param uploadDto 업로드 하는 DTO
    */
   @PostMapping("/upload")
-  public ResponseEntity<String> uploadMeme(@RequestBody MemeUploadDto uploadDto) {
+  public ResponseEntity<String> uploadMeme(
+      @ModelAttribute MemeUploadDto uploadDto,
+      @RequestPart("thumbnail") MultipartFile thumbnail) {
     // Spring Security의 SecurityContext에서 현재 사용자 정보 가져오기
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
 
-    memeService.uploadMeme(uploadDto, userDetails);
+    memeService.uploadMeme(uploadDto, userDetails, thumbnail);
     return ResponseEntity.ok().build();
   }
 

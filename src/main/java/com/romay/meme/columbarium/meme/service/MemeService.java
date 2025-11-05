@@ -13,6 +13,9 @@ import com.romay.meme.columbarium.meme.dto.*;
 import com.romay.meme.columbarium.meme.entity.Meme;
 import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import com.romay.meme.columbarium.s3.service.S3Service;
+import com.romay.meme.columbarium.util.JwtTokenProvider;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +41,7 @@ public class MemeService {
   private final MemberRepository memberRepository;
   private final LikeRepository likeRepository;
   private final S3Service s3Service;
+  private final JwtTokenProvider jwtTokenProvider;
 
   public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
     int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
@@ -82,7 +86,7 @@ public class MemeService {
     return "";
   }
 
-  public MemeDetailResponseDto getMemeInfo(Long memeCode, CustomUserDetails userDetails) {
+  public MemeDetailResponseDto getMemeInfo(Long memeCode, HttpServletRequest request) {
     // TODO 여기부분 fetch join 으로 meme 이랑 member(작성자) 한번에 가져오자
     Meme meme = memeRepository.findById(memeCode)
         .orElseThrow(() -> new MemeNotFoundException("존재하지 않는 밈 입니다."));
@@ -98,10 +102,34 @@ public class MemeService {
     Category category = categoryRepository.findById(meme.getCategoryCode()).get();
     dto.setCategory(category.getName());
 
-    if (userDetails != null) {
-      // 좋아요 했는지 여부 조회
+    // 좋아요 했는지 안했는지 여부 체크
+    String jwt = jwtTokenProvider.getJwtFromRequest(request);
+    boolean token = false;
+    String newAccessToken = null;
+
+    try {
+      boolean result = jwtTokenProvider.validateTokenForGetMemeInfo(jwt);
+      if (result) {
+        token = true; // 토큰이 정상적으로 검증되었을때에만 토큰 flag 를 true로 설정
+      }
+    } catch (ExpiredJwtException e) {
+      // 액세스 토큰이 만료되었을 경우 새로 발급받아서 줌
+      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
+      newAccessToken = jwtTokenProvider.generateAccessToken(username);
+      dto.setNewAccessToken(newAccessToken);
+      token = true;
+    } catch (Exception e) {
+      token = false;
+    }
+
+    if (token) { // 정상적인 토큰이거나, 토큰을 새로 발급했을때에만 좋아요 여부 조회
+      // 어차피 인증 성공했기 때문에 만료 버전으로 사용자명 추출
+      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
+      Member member = memberRepository.findMemberById(username).orElseThrow(
+          () -> new MemberNotFoundException("존재하지 않는 사용자입니다.")
+      );
       dto.setLikes(likeRepository.
-          existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), meme.getOrgMemeCode()));
+          existsByMemberCodeAndMemeCode(member.getCode(), meme.getOrgMemeCode()));
     }
 
     dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
@@ -110,11 +138,10 @@ public class MemeService {
   }
 
   @Transactional
-  public void uploadMeme(MemeUploadDto uploadDto, CustomUserDetails userDetails) {
-    // TODO 썸네일 업로드 기능 만들어야함
+  public void uploadMeme(MemeUploadDto uploadDto, CustomUserDetails userDetails,
+      MultipartFile thumbnail) {
 
     Meme meme = Meme.builder()
-//      .thumbnail(thumbnail) 썸네일 업로드 기능 만들쟈
         .authorCode(userDetails.getMember().getCode())
         .startDate(uploadDto.getStartDate())
         .endDate(uploadDto.getEndDate())
@@ -126,6 +153,12 @@ public class MemeService {
         .version(1L)
         .latest(true)
         .build();
+
+    memeRepository.save(meme);
+    meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
+
+    String thumbnailUrl = s3Service.uploadThumbnailFile(thumbnail, meme.getOrgMemeCode());
+    meme.setThumbnail(thumbnailUrl); // 썸네일 URL 설정
 
     Pattern pattern = Pattern.compile("https?://[^\\s)]+\\.(png|jpg|jpeg|gif)");
     Matcher matcher = pattern.matcher(meme.getContents());
@@ -139,7 +172,6 @@ public class MemeService {
         meme.setContents(meme.getContents().replace(url, newUrl));
       }
     }
-    meme.setOrgMemeCode(meme.getCode()); // 더티 체킹으로 자동 update
 
     log.info("memeUpload! : " + uploadDto.getTitle() + " author : " + userDetails.getMember()
         .getNickname());
@@ -189,6 +221,7 @@ public class MemeService {
         .authorCode(orgMeme.getAuthorCode())
         .likesCount(orgMeme.getLikesCount())
         .updaterCode(userDetails.getMember().getCode())
+        .thumbnail(orgMeme.getThumbnail())
         .latest(true)
         .build();
 

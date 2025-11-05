@@ -29,14 +29,18 @@ public class MemeDetailResponseDto {
   private Long authorCode; // 작성자 PK
   private String authorNickName; // 작성자 닉네임
   private Long updaterCode; // 수정자 pk
+  private String thumbnail; // 썸네일 URL
 
   private Integer likesCount; // 총 좋아요 갯수
   private boolean isLikes; // 글 조회하는 유저가 좋아요 눌렀는지 여부
+
+  private String newAccessToken; // 만료되었을때 새로 발급해서 주는 액세스 토큰
 
 
   // Entity -> DTO 변환 메서드
   public static MemeDetailResponseDto memeEntityToDto(Meme meme) {
     return MemeDetailResponseDto.builder()
+        .thumbnail(meme.getThumbnail())
         .code(meme.getCode())
         .title(meme.getTitle())
         .contents(meme.getContents())

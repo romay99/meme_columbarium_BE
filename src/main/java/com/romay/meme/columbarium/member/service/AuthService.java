@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -81,6 +83,7 @@ public class AuthService {
         .email(request.getEmail())
         .nickname(request.getNickname())
         .role(Role.ROLE_USER) // 기본 권한
+        .createdAt(LocalDateTime.now())
         .build();
 
     memberRepository.save(member);
@@ -88,5 +91,9 @@ public class AuthService {
 
   public boolean idCheck(String memberId) {
     return memberRepository.existsMemberById(memberId);
+  }
+
+  public boolean isNicknameAvailable(String nickname) {
+    return memberRepository.existsMemberByNickname(nickname);
   }
 }

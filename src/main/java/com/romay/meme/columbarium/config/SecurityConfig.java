@@ -77,7 +77,9 @@ public class SecurityConfig {
                 "/board/info",
                 "/comment/board/list",
                 "/meme/history",
-                "/member/refresh"
+                "/member/refresh",
+                "/member/check-nick-name/**",
+                "/member/logout"
             ).permitAll()
             .anyRequest().authenticated()
         )

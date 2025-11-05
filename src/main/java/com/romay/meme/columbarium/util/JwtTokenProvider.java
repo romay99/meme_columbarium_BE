@@ -2,9 +2,11 @@ package com.romay.meme.columbarium.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
@@ -27,6 +29,15 @@ public class JwtTokenProvider {
   private Key getSigningKey() {
     byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
     return Keys.hmacShaKeyFor(keyBytes);
+  }
+
+  // Authorization 헤더에서 Bearer 토큰 추출
+  public String getJwtFromRequest(HttpServletRequest request) {
+    String bearerToken = request.getHeader("Authorization");
+    if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+      return bearerToken.substring(7);
+    }
+    return null;
   }
 
   // Access Token 생성
@@ -68,6 +79,26 @@ public class JwtTokenProvider {
     return claims.getSubject();
   }
 
+  //만료된 토큰에서 사용자명 추출
+  public String getUsernameFromExpiredToken(String token) {
+    try {
+      Claims claims = Jwts.parser()
+          .setSigningKey(getSigningKey())
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
+      return claims.getSubject(); // 정상 토큰이면 여기서 반환
+    } catch (ExpiredJwtException e) {
+      // 만료 토큰일 경우에도 Claims 접근 가능
+      Claims claims = e.getClaims();
+      return claims.getSubject();
+    } catch (JwtException e) {
+      // 변조되거나 잘못된 토큰
+      return null;
+    }
+  }
+
+
   // 토큰 유효성 검증
   public boolean validateToken(String token) {
     try {
@@ -79,7 +110,21 @@ public class JwtTokenProvider {
     } catch (ExpiredJwtException e) {
       throw e; // 필터에서 처리하도록 다시 던짐
     } catch (Exception e) {
-      System.out.println("유효하지 않은 토큰: " + e.getMessage());
+      return false;
+    }
+  }
+
+  // 토큰 유효성 검증 (Only meme/getinfo)
+  public boolean validateTokenForGetMemeInfo(String token) {
+    try {
+      Jwts.parser()
+          .setSigningKey(getSigningKey())
+          .build()
+          .parseClaimsJws(token);
+      return true;
+    } catch (ExpiredJwtException e) {
+      throw e;
+    } catch (Exception e) {
       return false;
     }
   }
