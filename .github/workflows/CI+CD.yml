@@ -65,14 +65,14 @@ jobs:
             # EC2 로그 디렉토리 생성
             mkdir -p /home/ubuntu/logs
             
-            # Docker 이미지 최신화
-            echo "📦 Pulling latest Docker image..."
-            docker pull romaydev/meme:latest
-            
             # 기존 컨테이너 종료/삭제
             echo "🔄 Stopping existing container..."
             docker stop meme || true
             docker rm meme || true
+            
+            # Docker 이미지 최신화
+            echo "📦 Pulling latest Docker image..."
+            docker pull romaydev/meme:latest
             
             # 새로운 컨테이너 실행
             echo "▶️ Starting new container..."
