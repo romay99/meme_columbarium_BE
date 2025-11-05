@@ -44,7 +44,7 @@ public class MemeService {
   private final JwtTokenProvider jwtTokenProvider;
 
   public MemeListResponseDto getMemeList(String keyWord, int page, String sort) {
-    int pageSize = 10; // 한번에 가져올 데이터는 10개 고정
+    int pageSize = 15; // 한번에 가져올 데이터는 15개 고정
     Pageable pageable = PageRequest.of(page - 1, pageSize); // 페이지는 0부터 시작
     Page<Meme> memePage = null;
 
