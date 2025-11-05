@@ -29,30 +29,47 @@ jobs:
           echo "${{ secrets.APPLICATION_PROPERTIES }}" | base64 -d > src/main/resources/application.properties
           echo "✅ application.properties created successfully"
 
-      # 4. Maven 빌드
-      - name: Build with Maven
-        run: mvn clean package -DskipTests
+      # 4. Maven 빌드 (QueryDSL Q 클래스 생성 포함)
+      - name: Build with Maven (including QueryDSL)
+        run: |
+          echo "🔨 Starting Maven build with QueryDSL generation..."
+          mvn clean compile
+          echo "✅ Compile phase completed (Q classes generated)"
+          mvn package -DskipTests
+          echo "✅ Package phase completed"
 
-      # 5. Docker Hub 로그인
+      # 5. 빌드 산출물 검증
+      - name: Verify Build Artifacts
+        run: |
+          echo "📦 Checking JAR file..."
+          ls -lh target/*.jar
+          echo ""
+          echo "📂 Checking generated Q classes..."
+          find target/generated-sources/annotations -name "Q*.java" 2>/dev/null | head -10 || echo "⚠️ No Q*.java found"
+          echo ""
+          echo "🔍 Checking Q classes in JAR..."
+          jar tf target/*.jar | grep "Q.*\.class" | head -20 || echo "⚠️ Warning: No Q classes found in JAR"
+
+      # 6. Docker Hub 로그인
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-      # 6. Docker 이미지 빌드 및 푸시 (캐시 무시)
+      # 7. Docker 이미지 빌드 및 푸시
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           push: true
-          no-cache: true       # 🔹 캐시 무시
+          no-cache: true
           tags: |
             romaydev/meme:latest
             romaydev/meme:${{ github.sha }}
 
-      # 7. EC2 서버 배포
+      # 8. EC2 서버 배포
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.8
         with:
@@ -74,6 +91,10 @@ jobs:
             echo "📦 Pulling latest Docker image..."
             docker pull romaydev/meme:latest
             
+            # 미사용 이미지 정리
+            echo "🧹 Cleaning up unused images..."
+            docker image prune -f
+            
             # 새로운 컨테이너 실행
             echo "▶️ Starting new container..."
             docker run -d \
@@ -84,6 +105,14 @@ jobs:
               -v /home/ubuntu/logs:/home/ubuntu/logs \
               romaydev/meme:latest
             
+            # 컨테이너 시작 대기
+            echo "⏳ Waiting for container to start..."
+            sleep 10
+            
             # 컨테이너 상태 확인
             echo "✅ Deployment completed!"
             docker ps | grep meme
+            
+            # 헬스체크 (선택사항)
+            echo "🏥 Health check..."
+            curl -f http://localhost:8080/actuator/health || echo "⚠️ Health check endpoint not available"
