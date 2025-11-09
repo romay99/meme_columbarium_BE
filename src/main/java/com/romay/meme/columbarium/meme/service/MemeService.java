@@ -102,35 +102,36 @@ public class MemeService {
     Category category = categoryRepository.findById(meme.getCategoryCode()).get();
     dto.setCategory(category.getName());
 
+    // 아래 좋아요 검증 로직은 별도의 메서드로 분리함
     // 좋아요 했는지 안했는지 여부 체크
-    String jwt = jwtTokenProvider.getJwtFromRequest(request);
-    boolean token = false;
-    String newAccessToken = null;
+//    String jwt = jwtTokenProvider.getJwtFromRequest(request);
+//    boolean token = false;
+//    String newAccessToken = null;
 
-    try {
-      boolean result = jwtTokenProvider.validateTokenForGetMemeInfo(jwt);
-      if (result) {
-        token = true; // 토큰이 정상적으로 검증되었을때에만 토큰 flag 를 true로 설정
-      }
-    } catch (ExpiredJwtException e) {
-      // 액세스 토큰이 만료되었을 경우 새로 발급받아서 줌
-      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
-      newAccessToken = jwtTokenProvider.generateAccessToken(username);
-      dto.setNewAccessToken(newAccessToken);
-      token = true;
-    } catch (Exception e) {
-      token = false;
-    }
-
-    if (token) { // 정상적인 토큰이거나, 토큰을 새로 발급했을때에만 좋아요 여부 조회
-      // 어차피 인증 성공했기 때문에 만료 버전으로 사용자명 추출
-      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
-      Member member = memberRepository.findMemberById(username).orElseThrow(
-          () -> new MemberNotFoundException("존재하지 않는 사용자입니다.")
-      );
-      dto.setLikes(likeRepository.
-          existsByMemberCodeAndMemeCode(member.getCode(), meme.getOrgMemeCode()));
-    }
+//    try {
+//      boolean result = jwtTokenProvider.validateTokenForGetMemeInfo(jwt);
+//      if (result) {
+//        token = true; // 토큰이 정상적으로 검증되었을때에만 토큰 flag 를 true로 설정
+//      }
+//    } catch (ExpiredJwtException e) {
+//      // 액세스 토큰이 만료되었을 경우 새로 발급받아서 줌
+//      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
+//      newAccessToken = jwtTokenProvider.generateAccessToken(username);
+//      dto.setNewAccessToken(newAccessToken);
+//      token = true;
+//    } catch (Exception e) {
+//      token = false;
+//    }
+//
+//    if (token) { // 정상적인 토큰이거나, 토큰을 새로 발급했을때에만 좋아요 여부 조회
+//      // 어차피 인증 성공했기 때문에 만료 버전으로 사용자명 추출
+//      String username = jwtTokenProvider.getUsernameFromExpiredToken(jwt);
+//      Member member = memberRepository.findMemberById(username).orElseThrow(
+//          () -> new MemberNotFoundException("존재하지 않는 사용자입니다.")
+//      );
+//      dto.setLikes(likeRepository.
+//          existsByMemberCodeAndMemeCode(member.getCode(), meme.getOrgMemeCode()));
+//    }
 
     dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
 
