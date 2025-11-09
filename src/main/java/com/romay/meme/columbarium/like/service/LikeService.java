@@ -21,18 +21,19 @@ public class LikeService {
   @Transactional
   public void addLike(Long memeCode, CustomUserDetails userDetails) {
     Meme meme = memeRepository.findById(memeCode) // 지금 밈
-            .orElseThrow(
-                    () ->
-                            new MemeNotFoundException("존재하지 않는 밈 게시글 입니다.")
-            );
+        .orElseThrow(
+            () ->
+                new MemeNotFoundException("존재하지 않는 밈 게시글 입니다.")
+        );
 
     Meme orgMeme = memeRepository.findById(meme.getOrgMemeCode()) // 원래 밈
-            .orElseThrow(
-                    () ->
-                            new MemeNotFoundException("존재하지 않는 밈 게시글 입니다.")
-            );
+        .orElseThrow(
+            () ->
+                new MemeNotFoundException("존재하지 않는 밈 게시글 입니다.")
+        );
 
-    if (likeRepository.existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(), orgMeme.getCode())) {
+    if (likeRepository.existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(),
+        orgMeme.getCode())) {
       return; // 이미 좋아요를 눌렀으면 메서드 종료
     }
 
@@ -54,6 +55,16 @@ public class LikeService {
 
     meme.setLikesCount(meme.getLikesCount() - 1); // 좋아요 수 감소
 
-    likeRepository.deleteByMemberCodeAndMemeCode(userDetails.getMember().getCode(), meme.getOrgMemeCode());
+    likeRepository.deleteByMemberCodeAndMemeCode(userDetails.getMember().getCode(),
+        meme.getOrgMemeCode());
+  }
+
+  public boolean checkLike(Long orgMemeCode, CustomUserDetails userDetails) {
+    if (likeRepository.existsByMemberCodeAndMemeCode(userDetails.getMember().getCode(),
+        orgMemeCode)) {
+      return true;
+
+    }
+    return false;
   }
 }
