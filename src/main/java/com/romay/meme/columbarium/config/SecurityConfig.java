@@ -46,7 +46,8 @@ public class SecurityConfig {
         "http://localhost:3000",
         "https://meme-columbarium-fe.vercel.app",
         "https://www.ripmeme.co.kr",
-        "https://ripmeme.co.kr"
+        "https://ripmeme.co.kr",
+        "https://meme-columbarium-fe-next.vercel.app/"
     ));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(Arrays.asList("*"));
