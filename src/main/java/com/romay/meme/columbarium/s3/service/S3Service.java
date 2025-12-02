@@ -89,7 +89,7 @@ public class S3Service {
             .withCannedAcl(CannedAccessControlList.Private);
 
     s3client.putObject(request);
-    convertFile.delete();
+    convertFile.delete()
 
     log.info("Thumbnail Upload Success : {}", file.getOriginalFilename());
     return s3client.getUrl(bucketName, fileName).toString();
