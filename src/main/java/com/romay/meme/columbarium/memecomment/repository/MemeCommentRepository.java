@@ -13,7 +13,7 @@ public interface MemeCommentRepository extends JpaRepository<MemeComment, Long> 
 
   // Fetch Join 으로 멤버 닉네임까지 한번에 가져오자
   @Query("SELECT c from MemeComment c JOIN FETCH c.member "
-      + "WHERE c.memeCode = :meme ORDER BY c.createdAt DESC")
+      + "WHERE c.memeCode = :meme ORDER BY c.createdAt ASC")
   Page<MemeComment> findAllWithMemberByMemeCode(@Param("meme") Long memeCode, Pageable pageable);
 
 }
