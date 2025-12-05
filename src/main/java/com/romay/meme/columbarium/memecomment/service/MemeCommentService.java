@@ -1,6 +1,8 @@
 package com.romay.meme.columbarium.memecomment.service;
 
+import com.romay.meme.columbarium.exception.MemeNotFoundException;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
+import com.romay.meme.columbarium.meme.repository.MemeRepository;
 import com.romay.meme.columbarium.memecomment.dto.MemeCommentListDto;
 import com.romay.meme.columbarium.memecomment.dto.MemeCommentListResponseDto;
 import com.romay.meme.columbarium.memecomment.dto.MemeCommentPostDto;
@@ -21,12 +23,16 @@ import org.springframework.stereotype.Service;
 public class MemeCommentService {
 
   private final MemeCommentRepository memeCommentRepository;
+  private final MemeRepository memeRepository;
 
   public void postMemeComment(MemeCommentPostDto dto, CustomUserDetails userDetails) {
+    if (!memeRepository.existsById(dto.getOrgMemeCode())){
+      throw new MemeNotFoundException("존재하지 않는 밈 게시물입니다.");
+    }
     MemeComment entity = MemeComment.builder()
         .contents(dto.getContents())
         .createdAt(LocalDateTime.now())
-        .memeCode(dto.getMemeCode())
+        .memeCode(dto.getOrgMemeCode())
         .authorCode(userDetails.getMember().getCode())
         .build();
 
@@ -36,11 +42,11 @@ public class MemeCommentService {
         + userDetails.getMember().getNickname());
   }
 
-  public MemeCommentListResponseDto getMemeCommentList(int page, Long memeCode) {
+  public MemeCommentListResponseDto getMemeCommentList(int page, Long orgMemeCode) {
     int pageSize = 10; // 댓글 10개씩 가져오기
     Pageable pageable = PageRequest.of(page - 1, pageSize);
 
-    Page<MemeComment> comments = memeCommentRepository.findAllWithMemberByMemeCode(memeCode,
+    Page<MemeComment> comments = memeCommentRepository.findAllWithMemberByMemeCode(orgMemeCode,
         pageable);
 
     // DTO 로 변환

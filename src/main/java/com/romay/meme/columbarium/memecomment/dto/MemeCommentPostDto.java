@@ -9,7 +9,7 @@ import lombok.Setter;
 @Builder
 public class MemeCommentPostDto {
 
-  private Long memeCode;
+  private Long orgMemeCode;
   private String contents;
 
 }
