@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 @Repository
 public interface MemeRepository extends JpaRepository<Meme, Long>, MemeRepositoryCustom {
@@ -22,4 +23,10 @@ public interface MemeRepository extends JpaRepository<Meme, Long>, MemeRepositor
   // Fetch Join 으로 수정자까지 한번에 가져오자
   @Query("SELECT m from Meme m JOIN FETCH m.member WHERE m.latest = false AND m.orgMemeCode = :code ORDER BY m.version DESC")
   Page<Meme> findHistory(Pageable pageable, @Param("code") Long memeCode);
+
+  @Query("SELECT m.likesCount from Meme m WHERE m.orgMemeCode= :code AND m.code =:code")
+  int findOrgMemeLikesCount(@Param("code") Long orgMemeCode, @Param("code") Long memeCode);
+
+  @Query("SELECT m from Meme m JOIN FETCH m.member WHERE m.code = :code")
+  Optional<Meme> findByIdWithMember(@Param("code") Long memeCode);
 }
