@@ -42,9 +42,9 @@ public class MemeCommentController {
   @GetMapping("/list")
   public ResponseEntity<MemeCommentListResponseDto> getMemeCommentList(
       @RequestParam(name = "page") int page,
-      @RequestParam(name = "meme") Long memeCode) {
+      @RequestParam(name = "meme") Long orgMemeCode) {
     MemeCommentListResponseDto memeCommentList = memeCommentService.getMemeCommentList(page,
-        memeCode);
+            orgMemeCode);
     return ResponseEntity.ok(memeCommentList);
   }
 }

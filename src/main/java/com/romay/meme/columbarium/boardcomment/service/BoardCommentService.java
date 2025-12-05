@@ -1,10 +1,12 @@
 package com.romay.meme.columbarium.boardcomment.service;
 
+import com.romay.meme.columbarium.board.repository.BoardRepository;
 import com.romay.meme.columbarium.boardcomment.dto.BoardCommentListDto;
 import com.romay.meme.columbarium.boardcomment.dto.BoardCommentListResponseDto;
 import com.romay.meme.columbarium.boardcomment.dto.BoardCommentPostDto;
 import com.romay.meme.columbarium.boardcomment.entity.BoardComment;
 import com.romay.meme.columbarium.boardcomment.repository.BoardCommentRepository;
+import com.romay.meme.columbarium.exception.BoardNotFoundException;
 import com.romay.meme.columbarium.member.dto.CustomUserDetails;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,8 +24,13 @@ public class BoardCommentService {
 
   private static final Logger log = LoggerFactory.getLogger(BoardCommentService.class);
   private final BoardCommentRepository boardCommentRepository;
+  private final BoardRepository boardRepository;
 
   public void postBoardComment(BoardCommentPostDto dto, CustomUserDetails userDetails) {
+    if (!boardRepository.existsById(dto.getBoardCode())){
+      throw new BoardNotFoundException("존재하지 않는 게시글 입니다.");
+    }
+
     BoardComment boardComment = BoardComment.builder()
         .contents(dto.getContents())
         .createdAt(LocalDateTime.now())
