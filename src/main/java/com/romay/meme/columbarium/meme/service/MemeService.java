@@ -88,15 +88,14 @@ public class MemeService {
 
   public MemeDetailResponseDto getMemeInfo(Long memeCode, HttpServletRequest request) {
     // TODO 여기부분 fetch join 으로 meme 이랑 member(작성자) 한번에 가져오자
-    Meme meme = memeRepository.findById(memeCode)
+    Meme meme = memeRepository.findByIdWithMember(memeCode)
         .orElseThrow(() -> new MemeNotFoundException("존재하지 않는 밈 입니다."));
 
-    MemeDetailResponseDto dto = MemeDetailResponseDto.memeEntityToDto(meme);
-    Member author = memberRepository.findById(dto.getAuthorCode()).orElseThrow(
-        () -> new MemberNotFoundException("존재하지 않는 글 작성자입니다.")
-    );
+    int orgMemeLikesCount = memeRepository.findOrgMemeLikesCount(meme.getOrgMemeCode(),memeCode);
 
-    dto.setAuthorNickName(author.getNickname()); // DTO 에 작성자 닉네임 추가
+    MemeDetailResponseDto dto = MemeDetailResponseDto.memeEntityToDto(meme);
+
+    dto.setAuthorNickName(meme.getMember().getNickname()); // DTO 에 작성자 닉네임 추가
 
     // Category 이름 가져오기
     Category category = categoryRepository.findById(meme.getCategoryCode()).get();
@@ -133,7 +132,7 @@ public class MemeService {
 //          existsByMemberCodeAndMemeCode(member.getCode(), meme.getOrgMemeCode()));
 //    }
 
-    dto.setLikesCount(meme.getLikesCount()); // 좋아요 총 갯수 조회
+    dto.setLikesCount(orgMemeLikesCount); // 좋아요 총 갯수 조회
 
     return dto; // DTO 로 변환 후 return
   }
